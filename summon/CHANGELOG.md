@@ -4,7 +4,7 @@ Reverse-chronological log of changes.
 
 ## 2026-04-19 — Summon rename + Dictate feature + separate toggles
 
-- **Renamed** the whole project from **Jarvis → Summon**. Files, folders, LaunchAgent, logs, zip, memory, README all updated. Old LaunchAgent `com.noah.jarvis` unloaded; new `com.noah.summon` loaded under `/Users/noah/.claude/summon/`.
+- **Renamed** the whole project from **Jarvis → Summon**. Files, folders, LaunchAgent, logs, zip, memory, README all updated. Old LaunchAgent `com.jarvis` unloaded; new `com.summon` loaded under `~/.claude/summon/`.
 - **New feature: Dictate** — hold-to-talk voice-to-text via whisper.cpp, integrated as a submenu on the Summon icon (no second app):
   - **Right Ctrl + `'`** → *Dictate Now*: transcribe and paste into the currently focused window.
   - **Right Ctrl + `;`** → *Dictate for Claude*: queue transcription, auto-paste the next time iTerm2 becomes frontmost.

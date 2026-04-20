@@ -26,7 +26,7 @@ summon-bundle/
 │   └── gen_app_icon.py       rebuilds icon.icns from a scaled radar
 ├── Summon.app/               double-click to trigger a new Claude session + ensure menu bar service is alive
 └── LaunchAgents/
-    └── com.noah.summon.plist auto-start at login
+    └── com.summon.plist     auto-start at login
 ```
 
 `venv/` and `models/` are intentionally **not** included — native deps + 1.6GB model must be pulled per machine.
@@ -53,11 +53,11 @@ curl -L -o ~/.claude/summon/models/ggml-large-v3-turbo.bin \
 cp -R Summon.app ~/Desktop/Summon.app
 
 # 5. Install LaunchAgent
-cp LaunchAgents/com.noah.summon.plist ~/Library/LaunchAgents/
-launchctl bootstrap "gui/$(id -u)" ~/Library/LaunchAgents/com.noah.summon.plist
+cp LaunchAgents/com.summon.plist ~/Library/LaunchAgents/
+launchctl bootstrap "gui/$(id -u)" ~/Library/LaunchAgents/com.summon.plist
 ```
 
-The launchd plist hard-codes `/Users/noah/...`. On a different user, open it and swap `noah` for the correct username.
+The launchd plist uses absolute paths under your home dir. Open it and sed-replace any hardcoded `/Users/<name>` with `$HOME` (or your actual username) before loading on a different machine.
 
 ## First-run permissions
 
@@ -70,7 +70,7 @@ Summon needs **three** macOS permissions. All granted under System Settings → 
 
 After granting, restart Summon:
 ```bash
-launchctl kickstart -k "gui/$(id -u)/com.noah.summon"
+launchctl kickstart -k "gui/$(id -u)/com.summon"
 ```
 
 ## How to use
@@ -121,8 +121,8 @@ tail -f ~/.claude/summon/summon.log
 ## Uninstall
 
 ```bash
-launchctl bootout "gui/$(id -u)/com.noah.summon"
-rm ~/Library/LaunchAgents/com.noah.summon.plist
+launchctl bootout "gui/$(id -u)/com.summon"
+rm ~/Library/LaunchAgents/com.summon.plist
 rm -rf ~/.claude/summon
 rm -rf ~/Desktop/Summon.app
 ```
@@ -136,5 +136,5 @@ Then remove Microphone + Input Monitoring + Accessibility entries under System S
 - `launch_claude.sh` auto-sends `1` three seconds after Claude boots to accept `--dangerously-skip-permissions`.
 - Any edit to `summon.py` or `dictate.py` is picked up after a kickstart:
   ```bash
-  launchctl kickstart -k "gui/$(id -u)/com.noah.summon"
+  launchctl kickstart -k "gui/$(id -u)/com.summon"
   ```

@@ -11,14 +11,18 @@ venv/
 # Summon runtime state & artifacts
 summon/venv/
 summon/models/
+summon/models
 summon/*.log
 summon/state.json
 summon/dictate_state.json
 summon/Summon.iconset/
 summon/preview.png
 
-# Migration kit personal snapshot (contains SSH config, dotfiles, claude.tar.gz)
-migration/snapshot/
+# Personal / non-public folders — defensive excludes
+migration/
+terminal-guide/
+dist/
+SANITIZATION_NOTES.md
 
 # Logs
 *.log

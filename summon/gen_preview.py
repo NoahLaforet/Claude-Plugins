@@ -1,8 +1,7 @@
 """Build a preview sheet of all candidate icons on light + dark backgrounds.
 
 Each family gets a row. Within a row: 1x size, 3x size, 1x inverted, 3x inverted
-so Noah can see how each icon reads at actual menu-bar size and how it looks
-against both menu-bar themes.
+to see how each icon reads at actual menu-bar size and against both menu-bar themes.
 """
 from __future__ import annotations
 
