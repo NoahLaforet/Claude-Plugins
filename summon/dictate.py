@@ -1,13 +1,14 @@
 """Dictate — voice-to-text for Claude Code, integrated into Summon.
 
-Two hotkeys (hold-to-talk), both on the backtick/tilde key:
-  `  (backtick)       → "Dictate Now": paste into focused window immediately
-  ⇧+` (tilde)         → "Dictate for Claude": queue transcription, auto-paste
-                        next time iTerm2 becomes frontmost
+Two hotkeys (tap-to-start, tap-to-stop — Caps Lock is a toggle, not a hold):
+  Caps Lock           → "Dictate Now": paste into focused window immediately
+  ⇧+Caps Lock         → "Dictate for Claude": queue transcription. If Claude
+                        is already running, bring iTerm forward + paste.
+                        Otherwise launch a new Claude session, wait for it
+                        to boot (~5s), then paste.
 
-While Dictate is enabled, pressing ` or ~ will always start a recording —
-short taps (<0.4s) are dropped, so accidental taps are harmless, but you
-can't type a literal backtick/tilde until you toggle Dictate off.
+The Caps Lock LED stays lit while recording. Tap again to stop and paste.
+Recordings are capped at MAX_RECORDING_SEC (120s) in case you forget.
 
 Transcription uses whisper-cli with ggml-large-v3-turbo.bin (local, offline).
 Audio feedback via built-in macOS sounds (Pop/Tink/Glass).
@@ -38,6 +39,11 @@ WHISPER_BIN = "/opt/homebrew/bin/whisper-cli"
 DICTATE_LOG = SUMMON / "dictate.log"
 TRANSCRIPTIONS_LOG = SUMMON / "logs" / "transcriptions.jsonl"
 STATE_FILE = SUMMON / "dictate_state.json"
+LAUNCHER = SUMMON / "launch_claude.sh"
+# Delay before pasting into a freshly-launched Claude session. launch_claude.sh
+# types `claude …` then waits 3s before sending "1" to the permissions prompt,
+# so Claude's input line isn't actually ready until ~4s in. 5.5s is a safety margin.
+CLAUDE_BOOT_SEC = 5.5
 
 TMP_WAV = Path("/tmp/dictate.wav")
 TMP_TXT_PREFIX = Path("/tmp/dictate")  # whisper adds .txt
@@ -50,16 +56,10 @@ MAX_RECORDING_SEC = 120  # safety cap
 MIN_RECORDING_SEC = 0.4  # below this, discard (accidental tap)
 
 # Hotkeys — macOS virtual keycodes
-KEY_BACKTICK = 50  # ` / ~ key (left of 1, above Tab on US layout)
+KEY_CAPS_LOCK = 57
 # CGEvent flag masks
+CAPS_MASK = 0x00010000        # kCGEventFlagMaskAlphaShift (caps lock on)
 SHIFT_MASK = 0x00020000       # kCGEventFlagMaskShift
-CTRL_MASK = 0x00040000        # kCGEventFlagMaskControl
-OPTION_MASK = 0x00080000      # kCGEventFlagMaskAlternate
-COMMAND_MASK = 0x00100000     # kCGEventFlagMaskCommand
-FN_MASK = 0x00800000          # kCGEventFlagMaskSecondaryFn
-# Any of these held = pass-through (don't eat the event); Shift is OK because
-# it only selects mode.
-PASSTHRU_MASK = CTRL_MASK | OPTION_MASK | COMMAND_MASK | FN_MASK
 
 # Modes
 MODE_NOW = "now"        # paste into focused window immediately
@@ -244,6 +244,18 @@ def paste_via_cmd_v() -> None:
 
 # ─────────────────────────── Focus watcher ─────────────────────────── #
 
+def claude_is_running() -> bool:
+    """True if a `claude --dangerously-skip-permissions` process is alive."""
+    try:
+        result = subprocess.run(
+            ["pgrep", "-f", "claude --dangerously-skip-permissions"],
+            capture_output=True, text=True, timeout=2,
+        )
+        return bool(result.stdout.strip())
+    except Exception:
+        return False
+
+
 def frontmost_bundle() -> str | None:
     try:
         app = NSWorkspace.sharedWorkspace().frontmostApplication()
@@ -270,6 +282,7 @@ class HotkeyTap:
         self._runloop_source = None
         self._thread: threading.Thread | None = None
         self._active_mode: str | None = None  # which mode is currently held
+        self._caps_was_on: bool = False  # previous caps state for edge detection
 
     def start(self) -> bool:
         self._thread = threading.Thread(target=self._run, daemon=True, name="dictate-hotkeys")
@@ -314,40 +327,45 @@ class HotkeyTap:
                 Quartz.CGEventTapEnable(self._tap, True)
                 return event
 
-            # flagsChanged (modifier key alone) is no-op for backtick-based binds.
+            # Caps Lock arrives as a flagsChanged event. Use the
+            # AlphaShift bit to detect rising / falling edges.
             if event_type == Quartz.kCGEventFlagsChanged:
-                return event
-
-            if event_type in (Quartz.kCGEventKeyDown, Quartz.kCGEventKeyUp):
                 keycode = Quartz.CGEventGetIntegerValueField(
                     event, Quartz.kCGKeyboardEventKeycode
                 )
-                if keycode != KEY_BACKTICK:
+                if keycode != KEY_CAPS_LOCK:
                     return event
 
                 flags = Quartz.CGEventGetFlags(event)
-                # Pass through combos like ⌘` (switch window), ⌃` etc. — we
-                # only claim plain ` and ⇧`.
-                if flags & PASSTHRU_MASK:
-                    return event
-
+                caps_on = bool(flags & CAPS_MASK)
                 shift_down = bool(flags & SHIFT_MASK)
-                mode = MODE_CLAUDE if shift_down else MODE_NOW
+                log(
+                    f"caps event: on={caps_on} shift={shift_down} "
+                    f"active_mode={self._active_mode}"
+                )
 
-                if event_type == Quartz.kCGEventKeyDown:
+                # Rising edge: caps just turned on → start recording.
+                if caps_on and not self._caps_was_on:
+                    self._caps_was_on = True
                     if self._active_mode is None:
+                        mode = MODE_CLAUDE if shift_down else MODE_NOW
                         self._active_mode = mode
                         self.on_down(mode)
-                    # Always consume — the user doesn't want a literal
-                    # backtick typed into the focused field.
-                    return None
+                    return event
 
-                # keyUp
-                if self._active_mode is not None:
-                    stopped = self._active_mode
-                    self._active_mode = None
-                    self.on_up(stopped)
-                return None
+                # Falling edge: caps turned off → stop recording.
+                if not caps_on and self._caps_was_on:
+                    self._caps_was_on = False
+                    if self._active_mode is not None:
+                        stopped = self._active_mode
+                        self._active_mode = None
+                        self.on_up(stopped)
+                    return event
+
+                return event
+
+            # keyDown / keyUp: no-op (caps lock arrives via flagsChanged).
+            return event
         except Exception as e:
             log(f"hotkey callback error: {e!r}")
         return event
@@ -361,6 +379,7 @@ class DictateState:
     transcribing: bool = False
     queue: list[str] = field(default_factory=list)
     queue_ts: float = 0.0  # when most-recent item was added
+    paste_earliest_ts: float = 0.0  # hold paste until Claude has booted
 
 
 def load_config() -> dict:
@@ -391,8 +410,8 @@ class DictateController:
         self._hotkeys: HotkeyTap | None = None
 
         # Menu items — Summon will splice these into its menu
-        self._m_now = rumps.MenuItem("Dictate Now  (`)", callback=self._toggle_now)
-        self._m_claude = rumps.MenuItem("Dictate for Claude  (⇧`  ~)", callback=self._toggle_claude)
+        self._m_now = rumps.MenuItem("Dictate Now  (Caps Lock)", callback=self._toggle_now)
+        self._m_claude = rumps.MenuItem("Dictate for Claude  (⇧+Caps Lock)", callback=self._toggle_claude)
         self._m_sounds = rumps.MenuItem("Audio feedback", callback=self._toggle_sounds)
         self._m_auto_paste = rumps.MenuItem("Auto-paste (Dictate Now)",
                                             callback=self._toggle_auto_paste)
@@ -450,8 +469,13 @@ class DictateController:
             log(f"queue expired after {QUEUE_TTL_SEC}s, clearing {len(self.state.queue)} item(s)")
             self.state.queue.clear()
 
-        # iTerm focus triggers paste
-        if self.state.queue and frontmost_bundle() == ITERM_BUNDLE:
+        # iTerm focus triggers paste — but hold off if we just spawned Claude
+        # and it's still booting.
+        if (
+            self.state.queue
+            and frontmost_bundle() == ITERM_BUNDLE
+            and now >= self.state.paste_earliest_ts
+        ):
             self._paste_queue()
 
         self._refresh_menu_state()
@@ -519,6 +543,15 @@ class DictateController:
                 self.state.queue_ts = time.time()
                 copy_to_clipboard(QUEUE_SEPARATOR.join(self.state.queue))
                 log(f"queued ({len(self.state.queue)} item(s)): {text[:80]!r}")
+                if claude_is_running():
+                    # Existing session — just pull iTerm forward; tick() pastes.
+                    subprocess.run(["open", "-b", ITERM_BUNDLE], check=False)
+                else:
+                    # No live session — spawn one and wait for Claude's prompt
+                    # before pasting (otherwise we clobber the `claude …` line).
+                    self.state.paste_earliest_ts = time.time() + CLAUDE_BOOT_SEC
+                    log(f"launching new Claude session (paste delayed {CLAUDE_BOOT_SEC}s)")
+                    subprocess.Popen(["/bin/bash", str(LAUNCHER)])
         finally:
             self.state.transcribing = False
 
@@ -534,6 +567,7 @@ class DictateController:
         play_sound(SOUND_PASTE, self.cfg.get("sounds_enabled", True))
         log(f"pasted queue ({len(self.state.queue)} item(s)) into iTerm")
         self.state.queue.clear()
+        self.state.paste_earliest_ts = 0.0
 
     # ── Menu callbacks ──────────────────────────────────────────── #
 
