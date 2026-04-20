@@ -3,92 +3,87 @@
 A macOS menu-bar companion for Claude Code. Two integrated features:
 
 1. **Double-clap launcher** — opens a new iTerm2 Claude Code session when you double-clap.
-2. **Dictate** — hold-to-talk voice-to-text powered by whisper.cpp (local, offline).
-   - Right Ctrl + `'` → "Dictate Now": transcribe and paste into focused window.
-   - Right Ctrl + `;` → "Dictate for Claude": queue transcription, auto-paste next time iTerm2 is frontmost.
+2. **Dictate** — tap-to-start / tap-to-stop voice-to-text powered by whisper.cpp (local, offline).
+   - **Caps Lock** → "Dictate Now": transcribe and paste into the focused window.
+   - **⇧+Caps Lock** → "Dictate for Claude": queue transcription; if Claude is already running, bring iTerm forward and paste; otherwise launch a fresh Claude session and paste once it boots.
 
 Toggle everything from the menu bar; no clap / no hotkey = no mic usage.
 
-## What's in this bundle
-
-```
-summon-bundle/
-├── summon/                   source code, icons, doc (this folder)
-│   ├── summon.py             main menu-bar app + clap detector + dictate integration
-│   ├── dictate.py            whisper + hotkey + paste pipeline
-│   ├── launch_claude.sh      AppleScript launcher (new iTerm → claude)
-│   ├── icons/                radar animation frames + disabled state
-│   ├── icon.icns             .app icon
-│   ├── models/               whisper ggml model (not in zip — ~1.6GB, download separately)
-│   ├── tools/test_dictate_mvp.sh   shell MVP for transcription pipeline
-│   ├── gen_icons.py          regenerates menu-bar PNGs
-│   ├── gen_preview.py        icon-comparison preview sheet
-│   └── gen_app_icon.py       rebuilds icon.icns from a scaled radar
-├── Summon.app/               double-click to trigger a new Claude session + ensure menu bar service is alive
-└── LaunchAgents/
-    └── com.summon.plist     auto-start at login
-```
-
-`venv/` and `models/` are intentionally **not** included — native deps + 1.6GB model must be pulled per machine.
-
 ## Install
 
+One command:
+
 ```bash
-# 1. Copy source into its permanent home
-mkdir -p ~/.claude
-cp -R summon ~/.claude/summon
-
-# 2. Rebuild the Python venv
-python3 -m venv ~/.claude/summon/venv
-~/.claude/summon/venv/bin/pip install rumps sounddevice numpy scipy \
-  pyobjc-core pyobjc-framework-Cocoa pyobjc-framework-Quartz Pillow
-
-# 3. Install whisper.cpp + model
-brew install whisper-cpp sox
-mkdir -p ~/.claude/summon/models
-curl -L -o ~/.claude/summon/models/ggml-large-v3-turbo.bin \
-  https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo.bin
-
-# 4. Drop the .app on Desktop
-cp -R Summon.app ~/Desktop/Summon.app
-
-# 5. Install LaunchAgent
-cp LaunchAgents/com.summon.plist ~/Library/LaunchAgents/
-launchctl bootstrap "gui/$(id -u)" ~/Library/LaunchAgents/com.summon.plist
+./install.sh
 ```
 
-The launchd plist uses absolute paths under your home dir. Open it and sed-replace any hardcoded `/Users/<name>` with `$HOME` (or your actual username) before loading on a different machine.
+That script does everything:
+
+- Installs Homebrew deps (`python`, `whisper-cpp`)
+- Copies source to `~/.claude/summon/`
+- Builds a Python venv from `requirements.txt`
+- Downloads the whisper model (~1.6 GB, one-time) to `~/.claude/summon/models/`
+- Renders `com.summon.plist.template` with your absolute paths and loads it via `launchctl`
+- Creates `~/Desktop/Summon.app` — a one-click revive + launch button
+
+Flags:
+
+- `./install.sh --no-model` — skip the whisper download (you'll need to supply `ggml-large-v3-turbo.bin` yourself before Dictate works)
+- `./install.sh --force` — rebuild the venv from scratch
 
 ## First-run permissions
 
 Summon needs **three** macOS permissions. All granted under System Settings → Privacy & Security.
 
 1. **Microphone** — prompted on first clap + first dictation.
-2. **Input Monitoring** — required for the global dictation hotkey. Add the real Python.app bundle:
-   `/opt/homebrew/Cellar/python@3.14/<version>/Frameworks/Python.framework/Versions/3.14/Resources/Python.app`
+2. **Input Monitoring** — required for the Caps Lock hotkey. Add the real Python.app bundle (the installer prints the exact path to add at the end of its run, e.g. `/opt/homebrew/Cellar/python@3.14/<version>/Frameworks/Python.framework/Versions/3.14/Resources/Python.app`).
 3. **Accessibility** — required to inject ⌘V when pasting transcriptions. Add the same Python.app.
 
 After granting, restart Summon:
+
 ```bash
 launchctl kickstart -k "gui/$(id -u)/com.summon"
+```
+
+## What gets installed
+
+```
+~/.claude/summon/
+├── summon.py             main menu-bar app + clap detector
+├── dictate.py            whisper + hotkey + paste pipeline
+├── launch_claude.sh      AppleScript: new iTerm window → claude
+├── requirements.txt      pinned-floor Python deps
+├── venv/                 built by install.sh
+├── icons/                radar / mic / super animation frames + disabled
+├── models/               whisper ggml-large-v3-turbo.bin (~1.6 GB)
+├── icon.icns             Summon.app icon
+└── summon.log            app log (also mirrored to summon.stdout.log / .stderr.log)
+
+~/Library/LaunchAgents/com.summon.plist   launchd agent (auto-start at login)
+~/Desktop/Summon.app                      one-click revive + launch
 ```
 
 ## How to use
 
 ### Menu bar states
-- **Radar pulses** → clap detector is listening.
-- **Radar with a slash** → disabled (mic closed).
-- **Title shows `🔴`** → dictation recording in progress.
-- **Title shows `📋N`** → N items queued, will paste on next iTerm focus.
+
+- **Radar pulses** → double-clap detector is listening.
+- **Mic pulses** → Dictate is armed (hotkeys live).
+- **"Super" rings + sparkle** → both features on.
+- **Slashed radar** → everything off.
+- **Title shows `🔴`** → dictation is recording.
+- **Title shows `📋N`** → N items queued, will paste on iTerm focus.
 
 ### Menu items
-- **Enabled** — master toggle for clap detector.
+
+- **Double-clap launcher** — master toggle for the clap detector.
 - **Skip if Claude already running** — off by default; when on, a clap is ignored if Claude Code is already alive.
 - **Open Claude now** — fires the launcher directly.
-- **Dictate ▸** — submenu:
-  - **Dictate Now (⌃')** — enable/disable the immediate-paste hotkey.
-  - **Dictate for Claude (⌃;)** — enable/disable the queue hotkey.
-  - **Queue: N items** — status line; shows "will paste on iTerm focus" when non-empty.
+- **Dictate** — master toggle for voice dictation.
+- **Dictate settings** — submenu:
+  - **Dictate Now (Caps Lock)** — enable/disable the immediate-paste hotkey.
+  - **Dictate for Claude (⇧+Caps Lock)** — enable/disable the queue hotkey.
+  - **Queue: N items** — status; shows "will paste on iTerm focus" when non-empty.
   - **Paste queue into iTerm now** — manual flush.
   - **Clear queue** — drops queued items.
   - **Audio feedback** — toggle Pop/Tink/Glass blips.
@@ -98,7 +93,8 @@ launchctl kickstart -k "gui/$(id -u)/com.summon"
 - **Quit Summon** — fully stops the app.
 
 ### Dictate hotkeys
-Press and **hold** Right Ctrl + `'` (or `;`), speak, release. Minimum 0.4s recording; anything shorter is dropped as an accidental tap. Cap at 120s per clip. Queue auto-expires after 10 min of inactivity.
+
+Caps Lock is a **toggle**: tap to start, tap again to stop and paste. macOS has a built-in ~200 ms debounce on Caps Lock, so give it a firm press rather than a lightning-quick tap. Recordings under 0.4 s are dropped as accidental taps. The cap is 120 s per clip. The Claude queue auto-expires after 10 min of inactivity.
 
 ## Tuning clap detection
 
@@ -114,6 +110,7 @@ COOLDOWN_SEC          = 3.0    # lockout after trigger
 ```
 
 Tail the log while clapping to calibrate:
+
 ```bash
 tail -f ~/.claude/summon/summon.log
 ```

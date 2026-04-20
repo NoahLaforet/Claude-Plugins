@@ -6,7 +6,7 @@ Two plugins, one repo:
 
 | Tool | What it does | Primary files |
 |---|---|---|
-| **[summon/](summon/)** | Menu-bar companion: opens a new Claude session on **double-clap**, and hold-to-talk **voice dictation** to paste transcripts into the focused window (or queue for Claude) | `summon.py`, `dictate.py`, launchd plist, AppleScript launcher |
+| **[summon/](summon/)** | Menu-bar companion: opens a new Claude session on **double-clap**, and Caps Lock **voice dictation** to paste transcripts into the focused window (or auto-launch Claude for the queue) | `summon.py`, `dictate.py`, launchd plist, AppleScript launcher |
 | **[statusbar/](statusbar/)** | A three-line Claude Code status line showing live context usage, session cost, plan-budget tracking, burn rate, and a spinner that surfaces the active tool | `statusline.py`, `busy_tool.sh`, `settings.example.json` |
 
 Each folder has its own `README.md` with install steps, tuning knobs, and screenshots where relevant.
@@ -25,28 +25,31 @@ Everything here is deliberately small and deliberately separate. They share a ho
 
 ```bash
 # Clone the repo
-git clone <this-repo-url> ~/Code/claude-plugins
+git clone https://github.com/NoahLaforet/Claude-Plugins.git ~/Code/claude-plugins
 cd ~/Code/claude-plugins
 
-# 1. Status line (see statusbar/README.md for full steps)
+# 1. Summon menu bar app — one-command installer
+cd summon
+./install.sh         # use --no-model to skip the 1.6 GB whisper download
+cd ..
+
+# 2. Status line (see statusbar/README.md for full steps)
 cp statusbar/statusline.py ~/.claude/statusline.py
 chmod +x ~/.claude/statusline.py
 mkdir -p ~/.claude/hooks
 cp statusbar/busy_tool.sh ~/.claude/hooks/busy_tool.sh
 # Then merge statusbar/settings.example.json into ~/.claude/settings.json
-
-# 2. Summon menu bar app (see summon/README.md for full steps)
-mkdir -p ~/.claude/summon
-cp -R summon/* ~/.claude/summon/
-python3 -m venv ~/.claude/summon/venv
-~/.claude/summon/venv/bin/pip install \
-  rumps sounddevice numpy scipy \
-  pyobjc-core pyobjc-framework-Cocoa pyobjc-framework-Quartz Pillow
-brew install whisper-cpp sox
-mkdir -p ~/.claude/summon/models
-curl -L -o ~/.claude/summon/models/ggml-large-v3-turbo.bin \
-  https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3-turbo.bin
 ```
+
+What `summon/install.sh` does:
+
+- Installs Homebrew deps (`python`, `whisper-cpp`)
+- Builds a Python venv from [`summon/requirements.txt`](summon/requirements.txt)
+- Downloads the whisper model (~1.6 GB, one-time)
+- Loads the launchd agent and drops a `Summon.app` revive-button on the Desktop
+- Prints the exact Python binary to add under Input Monitoring + Accessibility
+
+The statusbar is pure stdlib Python — no `requirements.txt` needed.
 
 Per-plugin READMEs contain full permission, tuning, and troubleshooting docs.
 
