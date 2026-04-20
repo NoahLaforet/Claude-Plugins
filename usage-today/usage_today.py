@@ -12,7 +12,6 @@ from pathlib import Path
 HOME = Path.home()
 CLAUDE_DIR = HOME / ".claude"
 PROJECTS_ROOT = CLAUDE_DIR / "projects"
-COST_LEDGER = CLAUDE_DIR / ".cost_ledger.json"
 
 PRICING_PER_M = {
     "opus": {"in": 15.0, "out": 75.0, "cr": 1.5, "cc": 18.75},
@@ -23,7 +22,6 @@ PRICING_PER_M = {
 RESET = "\033[0m"
 BOLD = "\033[1m"
 DIM = "\033[38;5;248m"
-ITALIC = "\033[3m"
 RED = "\033[38;5;203m"
 GREEN = "\033[38;5;114m"
 YELLOW = "\033[38;5;221m"
@@ -136,13 +134,9 @@ def collect_today():
         "cost": 0.0, "assistant_msgs": 0, "user_prompts": 0,
         "tool_uses": 0,
     }
-    by_model = defaultdict(lambda: {
-        "cost": 0.0, "input": 0, "output": 0, "cache_read": 0,
-        "cache_create": 0, "msgs": 0,
-    })
+    by_model = defaultdict(lambda: {"cost": 0.0, "msgs": 0})
     by_project = defaultdict(lambda: {
-        "cost": 0.0, "tokens": 0, "msgs": 0, "sessions": set(),
-        "prompts": 0, "work_ms": 0,
+        "cost": 0.0, "msgs": 0, "sessions": set(), "work_ms": 0,
     })
     tool_counts = defaultdict(int)
     sessions_today: set[str] = set()
@@ -199,13 +193,11 @@ def collect_today():
                         c = msg.get("content")
                         if isinstance(c, str) and c.strip():
                             totals["user_prompts"] += 1
-                            by_project[project_dir]["prompts"] += 1
                         elif isinstance(c, list) and any(
                             isinstance(x, dict) and x.get("type") == "text"
                             for x in c
                         ):
                             totals["user_prompts"] += 1
-                            by_project[project_dir]["prompts"] += 1
 
                     if etype == "assistant":
                         content = msg.get("content")
@@ -234,14 +226,9 @@ def collect_today():
                         totals["assistant_msgs"] += 1
 
                         by_model[fam]["cost"] += c_usd
-                        by_model[fam]["input"] += inp
-                        by_model[fam]["output"] += out
-                        by_model[fam]["cache_read"] += cr
-                        by_model[fam]["cache_create"] += cc
                         by_model[fam]["msgs"] += 1
 
                         by_project[project_dir]["cost"] += c_usd
-                        by_project[project_dir]["tokens"] += inp + out + cr + cc
                         by_project[project_dir]["msgs"] += 1
         except Exception:
             continue

@@ -119,7 +119,7 @@ Then reload Claude Code (or open a new session) and run:
 
 ## Requirements
 
-- **Python 3.8+** — stdlib only, no external deps.
+- **Python 3.10+** — stdlib only, no external deps.
 - **Claude Code** with session transcripts under `~/.claude/projects/`.
   That's the default install layout.
 - Works on macOS and Linux. Windows not tested.

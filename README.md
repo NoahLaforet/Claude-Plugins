@@ -22,7 +22,7 @@ Everything here is deliberately small and deliberately separate. They share a ho
 
 ---
 
-## Quick install (both)
+## Quick install (all three)
 
 ```bash
 # Clone the repo
@@ -63,9 +63,9 @@ Per-plugin READMEs contain full permission, tuning, and troubleshooting docs.
 
 ## Requirements
 
-- **macOS 13+** (tested on Sequoia / Darwin 25.x). Most tools are macOS-specific (menu bar, Quartz event taps, `pbcopy`, `osascript`). The status line is the only portable piece.
-- **Python 3.10+** for statusline.py and Summon.
-- **Homebrew** for Summon's whisper.cpp + sox deps.
+- **macOS 13+** (tested on Sequoia / Darwin 25.x). Summon is macOS-only (menu bar, Quartz event taps, `pbcopy`, `osascript`). The statusbar and usage-today are portable — they'll work on any Unix with Python.
+- **Python 3.10+** — everything uses stdlib-only code but with modern type syntax.
+- **Homebrew** for Summon's `whisper-cpp` dep.
 - **Claude Code** — the whole point; grab it at https://claude.com/claude-code.
 
 ---
@@ -86,14 +86,16 @@ claude-plugins/
 
 ## Hardcoded paths
 
-A few files (LaunchAgent plist, desktop launcher shell script, statusline cost-ledger) may hard-code an absolute home path. On a fresh machine, sed-replace any hardcoded `/Users/<name>` with `$HOME`:
+The Summon and usage-today installers handle paths automatically. Only
+`statusbar/settings.example.json` has a `/Users/YOURNAME/` placeholder that
+needs swapping for your home path:
 
 ```bash
-find . -type f \( -name '*.plist' -o -name '*.sh' -o -name '*.json' -o -name '*.py' \) \
-  -exec sed -i '' "s|/Users/[^/]*|$HOME|g" {} +
+sed -i '' "s|/Users/YOURNAME|$HOME|g" ~/.claude/settings.json
 ```
 
-Or just open the files flagged in each subproject README and swap it by hand.
+Do that *after* you've merged the example into your own `settings.json` — see
+`statusbar/README.md` for the full walkthrough.
 
 ---
 
