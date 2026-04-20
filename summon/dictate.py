@@ -1,9 +1,13 @@
 """Dictate — voice-to-text for Claude Code, integrated into Summon.
 
-Two hotkeys (hold-to-talk):
-  Right Ctrl + '  → "Dictate Now": paste into focused window immediately
-  Right Ctrl + ;  → "Dictate for Claude": queue transcription, auto-paste
-                    next time iTerm2 becomes frontmost
+Two hotkeys (hold-to-talk), both on the backtick/tilde key:
+  `  (backtick)       → "Dictate Now": paste into focused window immediately
+  ⇧+` (tilde)         → "Dictate for Claude": queue transcription, auto-paste
+                        next time iTerm2 becomes frontmost
+
+While Dictate is enabled, pressing ` or ~ will always start a recording —
+short taps (<0.4s) are dropped, so accidental taps are harmless, but you
+can't type a literal backtick/tilde until you toggle Dictate off.
 
 Transcription uses whisper-cli with ggml-large-v3-turbo.bin (local, offline).
 Audio feedback via built-in macOS sounds (Pop/Tink/Glass).
@@ -28,8 +32,7 @@ from AppKit import NSWorkspace, NSSound
 
 # ─────────────────────────── Paths & constants ─────────────────────────── #
 
-HOME = Path.home()
-SUMMON = HOME / ".claude" / "summon"
+SUMMON = Path(__file__).resolve().parent
 MODEL = SUMMON / "models" / "ggml-large-v3-turbo.bin"
 WHISPER_BIN = "/opt/homebrew/bin/whisper-cli"
 DICTATE_LOG = SUMMON / "dictate.log"
@@ -47,9 +50,16 @@ MAX_RECORDING_SEC = 120  # safety cap
 MIN_RECORDING_SEC = 0.4  # below this, discard (accidental tap)
 
 # Hotkeys — macOS virtual keycodes
-KEY_SEMICOLON = 41
-KEY_QUOTE = 39
-RIGHT_CTRL_MASK = 0x2000  # NX_DEVICERCTLKEYMASK
+KEY_BACKTICK = 50  # ` / ~ key (left of 1, above Tab on US layout)
+# CGEvent flag masks
+SHIFT_MASK = 0x00020000       # kCGEventFlagMaskShift
+CTRL_MASK = 0x00040000        # kCGEventFlagMaskControl
+OPTION_MASK = 0x00080000      # kCGEventFlagMaskAlternate
+COMMAND_MASK = 0x00100000     # kCGEventFlagMaskCommand
+FN_MASK = 0x00800000          # kCGEventFlagMaskSecondaryFn
+# Any of these held = pass-through (don't eat the event); Shift is OK because
+# it only selects mode.
+PASSTHRU_MASK = CTRL_MASK | OPTION_MASK | COMMAND_MASK | FN_MASK
 
 # Modes
 MODE_NOW = "now"        # paste into focused window immediately
@@ -304,39 +314,40 @@ class HotkeyTap:
                 Quartz.CGEventTapEnable(self._tap, True)
                 return event
 
-            flags = Quartz.CGEventGetFlags(event)
-            right_ctrl_down = bool(flags & RIGHT_CTRL_MASK)
-
+            # flagsChanged (modifier key alone) is no-op for backtick-based binds.
             if event_type == Quartz.kCGEventFlagsChanged:
-                # If right-ctrl got released while we were recording, stop.
-                if not right_ctrl_down and self._active_mode is not None:
-                    mode = self._active_mode
-                    self._active_mode = None
-                    self.on_up(mode)
                 return event
 
             if event_type in (Quartz.kCGEventKeyDown, Quartz.kCGEventKeyUp):
                 keycode = Quartz.CGEventGetIntegerValueField(
                     event, Quartz.kCGKeyboardEventKeycode
                 )
-                if keycode not in (KEY_SEMICOLON, KEY_QUOTE):
+                if keycode != KEY_BACKTICK:
                     return event
 
-                mode = MODE_CLAUDE if keycode == KEY_SEMICOLON else MODE_NOW
+                flags = Quartz.CGEventGetFlags(event)
+                # Pass through combos like ⌘` (switch window), ⌃` etc. — we
+                # only claim plain ` and ⇧`.
+                if flags & PASSTHRU_MASK:
+                    return event
+
+                shift_down = bool(flags & SHIFT_MASK)
+                mode = MODE_CLAUDE if shift_down else MODE_NOW
 
                 if event_type == Quartz.kCGEventKeyDown:
-                    if right_ctrl_down and self._active_mode is None:
+                    if self._active_mode is None:
                         self._active_mode = mode
                         self.on_down(mode)
-                        return None  # consume
-                    return event  # not our combo — pass through
+                    # Always consume — the user doesn't want a literal
+                    # backtick typed into the focused field.
+                    return None
 
                 # keyUp
-                if self._active_mode == mode:
+                if self._active_mode is not None:
+                    stopped = self._active_mode
                     self._active_mode = None
-                    self.on_up(mode)
-                    return None  # consume
-                return event
+                    self.on_up(stopped)
+                return None
         except Exception as e:
             log(f"hotkey callback error: {e!r}")
         return event
@@ -380,8 +391,8 @@ class DictateController:
         self._hotkeys: HotkeyTap | None = None
 
         # Menu items — Summon will splice these into its menu
-        self._m_now = rumps.MenuItem("Dictate Now  (Right ⌃+')", callback=self._toggle_now)
-        self._m_claude = rumps.MenuItem("Dictate for Claude  (Right ⌃+;)", callback=self._toggle_claude)
+        self._m_now = rumps.MenuItem("Dictate Now  (`)", callback=self._toggle_now)
+        self._m_claude = rumps.MenuItem("Dictate for Claude  (⇧`  ~)", callback=self._toggle_claude)
         self._m_sounds = rumps.MenuItem("Audio feedback", callback=self._toggle_sounds)
         self._m_auto_paste = rumps.MenuItem("Auto-paste (Dictate Now)",
                                             callback=self._toggle_auto_paste)
