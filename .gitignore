@@ -1,0 +1,26 @@
+# macOS
+.DS_Store
+.claude
+
+# Python
+__pycache__/
+*.pyc
+venv/
+*.egg-info/
+
+# Summon runtime state & artifacts
+summon/venv/
+summon/models/
+summon/*.log
+summon/state.json
+summon/dictate_state.json
+summon/Summon.iconset/
+summon/preview.png
+
+# Migration kit personal snapshot (contains SSH config, dotfiles, claude.tar.gz)
+migration/snapshot/
+
+# Logs
+*.log
+*.stdout.log
+*.stderr.log

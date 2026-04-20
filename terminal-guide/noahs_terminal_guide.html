@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Noah's Terminal & CE Tools Guide</title>
+<style>
+  :root {
+    --base:#1e1e2e;--mantle:#181825;--crust:#11111b;
+    --surface0:#313244;--surface1:#45475a;--surface2:#585b70;
+    --overlay0:#6c7086;--overlay1:#7f849c;
+    --text:#cdd6f4;--subtext1:#bac2de;--subtext0:#a6adc8;
+    --mauve:#cba6f7;--blue:#89b4fa;--sapphire:#74c7ec;
+    --sky:#89dceb;--teal:#94e2d5;--green:#a6e3a1;
+    --yellow:#f9e2af;--peach:#fab387;--red:#f38ba8;
+    --pink:#f5c2e7;--lavender:#b4befe;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{font-family:'SF Pro Display',system-ui,sans-serif;background:var(--base);color:var(--text);line-height:1.7;font-size:15px}
+
+  /* ── HERO ── */
+  .hero{background:linear-gradient(135deg,var(--crust),#0a0a18);padding:56px 40px 48px;text-align:center;border-bottom:1px solid var(--surface0);position:relative;overflow:hidden}
+  .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 25% 50%,rgba(203,166,247,.1) 0,transparent 55%),radial-gradient(ellipse at 75% 30%,rgba(137,180,250,.07) 0,transparent 50%);pointer-events:none}
+  .hero-eyebrow{display:inline-flex;align-items:center;gap:8px;background:var(--surface0);border:1px solid var(--surface2);color:var(--subtext0);padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;margin-bottom:20px}
+  .hero h1{font-size:52px;font-weight:800;background:linear-gradient(120deg,var(--blue),var(--mauve),var(--pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-1.5px;line-height:1.1;margin-bottom:14px}
+  .hero p{color:var(--subtext1);font-size:16px;max-width:480px;margin:0 auto 24px}
+  .hero-stats{display:flex;gap:24px;justify-content:center;flex-wrap:wrap}
+  .stat{background:var(--surface0);border:1px solid var(--surface1);border-radius:10px;padding:8px 18px;font-size:13px;color:var(--subtext0)}
+  .stat strong{color:var(--text);font-weight:700}
+
+  /* ── NAV ── */
+  .sticky-nav{position:sticky;top:0;z-index:100;background:rgba(24,24,37,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--surface0);padding:12px 24px;display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+  .sticky-nav a{color:var(--subtext0);text-decoration:none;font-size:12px;font-weight:600;padding:5px 12px;border-radius:16px;border:1px solid transparent;transition:all .15s;letter-spacing:.3px}
+  .sticky-nav a:hover{color:var(--text);background:var(--surface0);border-color:var(--surface2)}
+
+  /* ── LAYOUT ── */
+  .container{max-width:960px;margin:0 auto;padding:0 24px 80px}
+
+  /* ── SECTION HEADER ── */
+  .sec{margin-top:56px}
+  .sec-head{display:flex;align-items:center;gap:14px;margin-bottom:6px;padding-bottom:14px;border-bottom:1px solid var(--surface0)}
+  .sec-icon{width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+  .sec-head h2{font-size:24px;font-weight:800;color:var(--text)}
+  .sec-head p{font-size:13px;color:var(--subtext0);margin-top:2px}
+
+  /* ── CARDS ── */
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-top:16px}
+  .card{background:var(--mantle);border:1px solid var(--surface0);border-radius:14px;padding:18px 20px;position:relative;transition:border-color .15s,transform .15s}
+  .card:hover{border-color:var(--surface2);transform:translateY(-1px)}
+  .card-top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+  .c-icon{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+  .card h3{font-size:14px;font-weight:700;color:var(--text)}
+  .card .why{font-size:12px;color:var(--subtext0);margin-bottom:8px;line-height:1.5}
+  .badge{position:absolute;top:12px;right:12px;font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;text-transform:uppercase;letter-spacing:.4px}
+  .b-must{background:rgba(250,179,135,.15);color:var(--peach);border:1px solid rgba(250,179,135,.3)}
+  .b-cool{background:rgba(203,166,247,.15);color:var(--mauve);border:1px solid rgba(203,166,247,.3)}
+  .b-hdl {background:rgba(137,180,250,.15);color:var(--blue); border:1px solid rgba(137,180,250,.3)}
+  .b-new {background:rgba(166,227,161,.15);color:var(--green);border:1px solid rgba(166,227,161,.3)}
+
+  /* ── CODE BLOCKS ── */
+  .code-block{background:var(--crust);border:1px solid var(--surface0);border-radius:10px;overflow:hidden;margin:10px 0;font-family:'SF Mono','JetBrains Mono','Fira Code',monospace;font-size:12.5px}
+  .code-head{background:var(--mantle);padding:7px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--surface0)}
+  .dot{width:11px;height:11px;border-radius:50%}
+  .dr{background:#ff5f57}.dy{background:#febc2e}.dg{background:#28c840}
+  .code-label{font-size:11px;color:var(--overlay1);margin-left:6px;font-family:system-ui}
+  .code-body{padding:14px 16px;line-height:2}
+  .p{color:var(--mauve)}          /* prompt */
+  .cmd{color:var(--blue)}         /* command */
+  .arg{color:var(--green)}        /* argument/file */
+  .out{color:var(--subtext0)}     /* output */
+  .cmt{color:var(--overlay1)}     /* comment */
+  .ok {color:var(--green)}        /* success */
+  .yl {color:var(--yellow)}       /* yellow accent */
+  .pk {color:var(--pink)}         /* pink */
+  .tl {color:var(--teal)}         /* teal */
+  code{font-family:'SF Mono','JetBrains Mono','Fira Code',monospace;font-size:12px;background:var(--surface0);color:var(--green);padding:1px 6px;border-radius:4px}
+
+  /* ── COMMAND TABLE ── */
+  .cmd-table{width:100%;border-collapse:collapse;margin-top:14px;font-size:13px}
+  .cmd-table th{text-align:left;padding:8px 14px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--overlay1);background:var(--mantle);border-bottom:1px solid var(--surface0)}
+  .cmd-table td{padding:10px 14px;border-bottom:1px solid var(--surface0);vertical-align:top}
+  .cmd-table tr:last-child td{border-bottom:none}
+  .cmd-table tr:hover td{background:var(--surface0)}
+  .cmd-table .k{font-family:'SF Mono','JetBrains Mono',monospace;color:var(--blue);font-size:12px;white-space:nowrap}
+  .cmd-table .v{color:var(--text)}
+  .cmd-table .n{color:var(--subtext0);font-size:12px}
+
+  /* ── CALLOUT ── */
+  .callout{background:var(--mantle);border-left:3px solid var(--mauve);border-radius:0 10px 10px 0;padding:13px 16px;margin:14px 0;font-size:13px;color:var(--subtext1)}
+  .callout strong{color:var(--mauve)}
+  .callout.green{border-color:var(--green)}.callout.green strong{color:var(--green)}
+  .callout.blue{border-color:var(--blue)}.callout.blue strong{color:var(--blue)}
+  .callout.yellow{border-color:var(--yellow)}.callout.yellow strong{color:var(--yellow)}
+
+  /* ── KEYBOARD SHORTCUT ── */
+  kbd{display:inline-block;background:var(--surface1);border:1px solid var(--surface2);border-radius:5px;padding:1px 7px;font-family:'SF Mono',monospace;font-size:11px;color:var(--text);box-shadow:0 1px 0 var(--surface2)}
+
+  /* ── ICON BG HELPERS ── */
+  .bg-mauve{background:rgba(203,166,247,.15)}.bg-blue{background:rgba(137,180,250,.15)}
+  .bg-green{background:rgba(166,227,161,.15)}.bg-peach{background:rgba(250,179,135,.15)}
+  .bg-teal{background:rgba(148,226,213,.15)}.bg-yellow{background:rgba(249,226,175,.15)}
+  .bg-red{background:rgba(243,139,168,.15)}.bg-sapphire{background:rgba(116,199,236,.15)}
+
+  /* ── WIDE BLOCK ── */
+  .wide{background:var(--mantle);border:1px solid var(--surface0);border-radius:14px;padding:20px 22px;margin-top:14px}
+  .wide h3{font-size:14px;font-weight:700;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+
+  /* ── FLOW DIAGRAM ── */
+  .flow{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:14px 0;font-size:13px}
+  .flow-box{background:var(--surface0);border:1px solid var(--surface1);border-radius:8px;padding:6px 14px;color:var(--text);font-weight:600;white-space:nowrap}
+  .flow-arrow{color:var(--overlay1);font-size:18px}
+
+  footer{text-align:center;padding:40px 20px;color:var(--overlay0);font-size:12px;border-top:1px solid var(--surface0);margin-top:40px}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-eyebrow">🎓 UCSC · CE · Digital Hardware · macOS</div>
+  <h1>Noah's Terminal Guide</h1>
+  <p>Everything you installed, what it does, and how to use it — in one place.</p>
+  <div class="hero-stats">
+    <div class="stat"><strong>30+</strong> tools installed</div>
+    <div class="stat"><strong>M1 Max</strong> · macOS Tahoe</div>
+    <div class="stat"><strong>Catppuccin Mocha</strong> theme</div>
+    <div class="stat">Updated <strong>March 2026</strong></div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav class="sticky-nav">
+  <a href="#terminal">Terminal</a>
+  <a href="#shell">Shell</a>
+  <a href="#files">Files & Search</a>
+  <a href="#git">Git</a>
+  <a href="#eda">EDA & HDL</a>
+  <a href="#python">Python</a>
+  <a href="#cad">CAD & 3D</a>
+  <a href="#functions">Functions</a>
+  <a href="#apps">Apps</a>
+  <a href="#cheatsheet">Cheat Sheet</a>
+</nav>
+
+<div class="container">
+
+<!-- ══════════════════════════════════════════════ TERMINAL -->
+<div id="terminal" class="sec">
+  <div class="sec-head">
+    <div class="sec-icon bg-blue">🖥️</div>
+    <div><h2>Terminal & Prompt</h2><p>iTerm2 + Starship — your daily driver</p></div>
+  </div>
+
+  <div class="callout blue"><strong>Action needed:</strong> Open <strong>iTerm2</strong> (Applications folder) instead of the default Terminal. Then set font: <strong>Preferences → Profiles → Text → Font → JetBrainsMono Nerd Font</strong>. This makes all icons render correctly.</div>
+
+  <div class="cards">
+    <div class="card">
+      <span class="badge b-must">Must Use</span>
+      <div class="card-top"><div class="c-icon bg-blue">🍎</div><h3>iTerm2</h3></div>
+      <div class="why"><strong>Why:</strong> Apple Terminal doesn't support Nerd Fonts (icons), has no GPU rendering, and can't split panes. iTerm2 is the gold standard Mac terminal.</div>
+      <p style="font-size:12px;color:var(--subtext0)">Split pane: <kbd>Cmd+D</kbd> vertical, <kbd>Cmd+Shift+D</kbd> horizontal</p>
+    </div>
+    <div class="card">
+      <span class="badge b-must">Active Now</span>
+      <div class="card-top"><div class="c-icon bg-mauve">⭐</div><h3>Starship Prompt</h3></div>
+      <div class="why"><strong>Why:</strong> Your prompt now auto-shows git branch, file change counts, language versions, battery %, and time. No extra commands needed.</div>
+      <div class="code-block">
+        <div class="code-body" style="padding:10px 14px">
+          <div><span class="p">╭─</span><span class="tl">  ~/hdl/uart </span><span class="pk"> main</span><span class="yl"> !3</span></div>
+          <div><span class="p">╰─❯</span> <span class="cmt">← your cursor goes here</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-top"><div class="c-icon bg-teal">🔤</div><h3>JetBrainsMono Nerd Font</h3></div>
+      <div class="why"><strong>Why:</strong> Adds 3,000+ icons to a coding font with ligatures. Required for the folder icons, git symbols, and language badges in your prompt to show correctly.</div>
+      <p style="font-size:12px;color:var(--subtext0)">Set in: iTerm2 → Prefs → Profiles → Text → Font</p>
+    </div>
+    <div class="card">
+      <div class="card-top"><div class="c-icon bg-green">📺</div><h3>tmux</h3></div>
+      <div class="why"><strong>Why:</strong> Run your simulation in one pane, edit code in another, and keep everything in one window. Sessions persist even if you close the terminal.</div>
+      <p style="font-size:12px;color:var(--subtext0)"><code>tmn work</code> → new session · <code>tma work</code> → reattach<br><kbd>Ctrl+B</kbd> then <kbd>%</kbd> → vertical split</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ SHELL -->
+<div id="shell" class="sec">
+  <div class="sec-head">
+    <div class="sec-icon bg-mauve">🐚</div>
+    <div><h2>Shell Enhancements</h2><p>Zsh plugins that make typing faster and less error-prone</p></div>
+  </div>
+
+  <div class="cards">
+    <div class="card">
+      <span class="badge b-must">Active Now</span>
+      <div class="card-top"><div class="c-icon bg-teal">💡</div><h3>zsh-autosuggestions</h3></div>
+      <div class="why"><strong>Why:</strong> As you type, it shows a faded gray suggestion based on your history. Press <kbd>→</kbd> to accept the whole thing or <kbd>Ctrl+→</kbd> for one word. Eliminates retyping long commands.</div>
+      <p style="font-size:12px;color:var(--subtext0)">Press <kbd>→</kbd> to accept suggestion</p>
+    </div>
+    <div class="card">
+      <span class="badge b-must">Active Now</span>
+      <div class="card-top"><div class="c-icon bg-green">🎨</div><h3>zsh-syntax-highlighting</h3></div>
+      <div class="why"><strong>Why:</strong> Commands turn <span style="color:var(--green)">green</span> when valid, <span style="color:var(--red)">red</span> when invalid — before you hit Enter. Catches typos instantly.</div>
+    </div>
+    <div class="card">
+      <div class="card-top"><div class="c-icon bg-sapphire">🔎</div><h3>fzf — Fuzzy Finder</h3></div>
+      <div class="why"><strong>Why:</strong> Three killer keyboard shortcuts that replace digging through history or doing <code>find</code> commands manually.</div>
+      <table class="cmd-table" style="margin-top:8px">
+        <tr><td class="k"><kbd>Ctrl+R</kbd></td><td class="n">Fuzzy search command history</td></tr>
+        <tr><td class="k"><kbd>Ctrl+T</kbd></td><td class="n">Fuzzy find any file, inserts path</td></tr>
+        <tr><td class="k"><kbd>Alt+C</kbd></td><td class="n">Fuzzy jump to any directory</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-top"><div class="c-icon bg-yellow">📜</div><h3>History Substring Search</h3></div>
+      <div class="why"><strong>Why:</strong> Type part of a command, then press <kbd>↑</kbd> — it only cycles through history entries that contain what you typed. Much smarter than default history search.</div>
+      <p style="font-size:12px;color:var(--subtext0)">Type <code>iverilog</code> then press <kbd>↑</kbd> to cycle through all past iverilog runs</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ FILES -->
+<div id="files" class="sec">
+  <div class="sec-head">
+    <div class="sec-icon bg-green">📁</div>
+    <div><h2>Files, Search & Navigation</h2><p>Modern replacements for ls, cat, grep, and find</p></div>
+  </div>
+
+  <div class="wide">
+    <h3>🦎 eza — replaces <code>ls</code></h3>
+    <div class="code-block">
+      <div class="code-head"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div><div class="code-label">file listing</div></div>
+      <div class="code-body">
+        <div><span class="p">❯</span> <span class="cmd">ll</span>  <span class="cmt"># detailed list: icons + git status + permissions</span></div>
+        <div><span class="out">drwxr-xr-x  📁 src/          +2 untracked</span></div>
+        <div><span class="out">-rw-r--r--  📄 top.v         modified</span></div>
+        <div><span class="out">-rw-r--r--  📄 testbench.v</span></div>
+        <div>&nbsp;</div>
+        <div><span class="p">❯</span> <span class="cmd">lt</span>  <span class="cmt"># tree view, 2 levels deep</span></div>
+        <div><span class="p">❯</span> <span class="cmd">ltt</span> <span class="cmt"># tree view, 3 levels deep</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wide">
+    <h3>🦇 bat — replaces <code>cat</code></h3>
+    <div class="code-block">
+      <div class="code-head"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div><div class="code-label">reading files</div></div>
+      <div class="code-body">
+        <div><span class="p">❯</span> <span class="cmd">cat</span> <span class="arg">top.v</span>  <span class="cmt"># syntax highlighted Verilog with line numbers</span></div>
+        <div><span class="p">❯</span> <span class="cmd">hex</span> <span class="arg">rom.bin</span> <span class="cmt"># hex dump with syntax highlighting (custom function)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wide">
+    <h3>🔍 ripgrep (rg) — replaces <code>grep</code></h3>
+    <div class="code-block">
+      <div class="code-head"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div><div class="code-label">searching code</div></div>
+      <div class="code-body">
+        <div><span class="p">❯</span> <span class="cmd">rg</span> <span class="arg">"module uart"</span>          <span class="cmt"># find in all files recursively</span></div>
+        <div><span class="p">❯</span> <span class="cmd">rg</span> <span class="arg">"always @"</span> <span class="cmd">--type v</span>   <span class="cmt"># only search .v files</span></div>
+        <div><span class="p">❯</span> <span class="cmd">rg</span> <span class="arg">"TODO"</span> <span class="cmd">-l</span>            <span class="cmt"># just list filenames, not matches</span></div>
+      </div>
+    </div>
+    <p style="font-size:12px;color:var(--subtext0);margin-top:8px"><strong>Why over grep:</strong> 10-100× faster, respects .gitignore, shows context automatically, handles binary files gracefully.</p>
+  </div>
+
+  <div class="wide">
+    <h3>📂 fd — replaces <code>find</code></h3>
+    <div class="code-block">
+      <div class="code-head"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div><div class="code-label">finding files</div></div>
+      <div class="code-body">
+        <div><span class="p">❯</span> <span class="cmd">fd</span> <span class="arg">"*.v"</span>         <span class="cmt"># find all Verilog files</span></div>
+        <div><span class="p">❯</span> <span class="cmd">fd</span> <span class="arg">"testbench"</span>  <span class="cmt"># find files with "testbench" in name</span></div>
+        <div><span class="p">❯</span> <span class="cmd">fd</span> <span class="arg">".v" -x</span> <span class="cmd">vlint</span> <span class="cmt"># lint every .v file found</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ GIT -->
+<div id="git" class="sec">
+  <div class="sec-head">
+    <div class="sec-icon bg-peach">🌿</div>
+    <div><h2>Git</h2><p>Aliases + lazygit + delta for a much better git workflow</p></div>
+  </div>
+
+  <div class="callout green"><strong>delta</strong> is now your default git pager — diffs are syntax-highlighted and side-by-side instead of the ugly default. Just run <code>git diff</code> or <code>gd</code> and it looks beautiful automatically.</div>
+
+  <div class="wide">
+    <h3>⚡ Daily Git Aliases</h3>
+    <table class="cmd-table">
+      <tr><th>Alias</th><th>What it does</th><th>When to use it</th></tr>
+      <tr><td class="k">gs</td><td class="v"><code>git status -sb</code></td><td class="n">Quick compact status — what's changed?</td></tr>
+      <tr><td class="k">gaa</td><td class="v"><code>git add --all</code></td><td class="n">Stage everything</td></tr>
+      <tr><td class="k">gc "message"</td><td class="v"><code>git commit -m</code></td><td class="n">Commit with message</td></tr>
+      <tr><td class="k">gp</td><td class="v"><code>git push</code></td><td class="n">Push to remote</td></tr>
+      <tr><td class="k">gpl</td><td class="v"><code>git pull</code></td><td class="n">Pull latest</td></tr>
+      <tr><td class="k">glo</td><td class="v"><code>git log --oneline --graph --all</code></td><td class="n">Visual branch graph — see history at a glance</td></tr>
+      <tr><td class="k">gd</td><td class="v"><code>git diff</code></td><td class="n">See unstaged changes (rendered by delta)</td></tr>
+      <tr><td class="k">gds</td><td class="v"><code>git diff --staged</code></td><td class="n">See staged changes before committing</td></tr>
+      <tr><td class="k">gcb branch-name</td><td class="v"><code>git checkout -b</code></td><td class="n">Create and switch to new branch</td></tr>
+      <tr><td class="k">gst / gstp</td><td class="v"><code>git stash / stash pop</code></td><td class="n">Temporarily shelve work</td></tr>
+    </table>
+  </div>
+
+  <div class="wide">
+    <h3>🦥 lazygit — full visual git TUI</h3>
+    <div class="callout" style="margin-top:0;margin-bottom:12px"><strong>Run:</strong> type <code>lg</code> in any git repo. Press <kbd>q</kbd> to quit.</div>
+    <table class="cmd-table">
+      <tr><th>Key</th><th>What it does</th></tr>
+      <tr><td class="k"><kbd>Space</kbd></td><td class="n">Stage/unstage a file or hunk</td></tr>
+      <tr><td class="k"><kbd>c</kbd></td><td class="n">Commit (opens message editor)</td></tr>
+      <tr><td class="k"><kbd>P</kbd></td><td class="n">Push</td></tr>
+      <tr><td class="k"><kbd>p</kbd></td><td class="n">Pull</td></tr>
+      <tr><td class="k"><kbd>b</kbd></td><td class="n">Switch to branches panel</td></tr>
+      <tr><td class="k"><kbd>?</kbd></td><td class="n">Show all keyboard shortcuts</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ EDA -->
+<div id="eda" class="sec">
+  <div class="sec-head">
+    <div class="sec-icon bg-blue">🔌</div>
+    <div><h2>EDA & Digital Hardware Tools</h2><p>Full open-source Verilog + FPGA toolchain</p></div>
+  </div>
+
+  <div class="callout blue"><strong>Workflow overview:</strong> Write HDL → simulate with iverilog/Verilator → view waveforms in GTKWave → synthesize with Yosys → place & route with nextpnr → flash to board with iceprog.</div>
+
+  <div class="flow">
+    <div class="flow-box">Write .v</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">iverilog / Verilator</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">GTKWave</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">Yosys</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">nextpnr</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-box">iceprog</div>
+  </div>
+
+  <div class="wide">
+    <h3>⚡ Quick Simulation Commands (Custom Aliases)</h3>
+    <div class="code-block">
+      <div class="code-head"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div><div class="code-label">simulate Verilog</div></div>
+      <div class="code-body">
+        <div><span class="cmt"># vrun — compile and run, see output in terminal</span></div>
+        <div><span class="p">❯</span> <span class="cmd">vrun</span> <span class="arg">top.v testbench.v</span></div>
+        <div><span class="ok">Simulation done. 1024 cycles.</span></div>
+        <div>&nbsp;</div>
+        <div><span class="cmt"># vsim — compile, run, AND open GTKWave automatically</span></div>
+        <div><span class="p">❯</span> <span class="cmd">vsim</span> <span class="arg">top.v testbench.v</span></div>
+        <div><span class="ok">VCD info: dumpfile /tmp/sim.vcd opened.</span></div>
+        <div><span class="out">[GTKWave opens with your waveform]</span></div>
+        <div>&nbsp;</div>
+        <div><span class="cmt"># vlint — lint check without running</span></div>
+        <div><span class="p">❯</span> <span class="cmd">vlint</span> <span class="arg">top.v</span></div>
+        <div><span class="ok">No lint warnings/errors</span></div>
+      </div>
+    </div>
+    <p style="font-size:12px;color:var(--subtext0);margin-top:8px">
+      <strong>Note:</strong> Your testbench needs <code>$dumpfile("/tmp/sim.vcd"); $dumpvars(0, tb);</code> for vsim to work.
+    </p>
+  </div>
+
+  <div class="wide">
+    <h3>🔬 iverilog — Icarus Verilog (manual usage)</h3>
+    <div class="code-block">
+      <div class="code-head"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div><div class="code-label">manual compile + run</div></div>
+      <div class="code-body">
+        <div><span class="p">❯</span> <span class="cmd">iverilog</span> <span class="arg">-o sim top.v testbench.v</span> <span class="cmt"># compile</span></div>
+        <div><span class="p">❯</span> <span class="cmd">vvp</span> <span class="arg">sim</span>                              <span class="cmt"># run</span></div>
+        <div><span class="p">❯</span> <span class="cmd">gtkwave</span> <span class="arg">sim.vcd</span>                    <span class="cmt"># open waveform</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wide">
+    <h3>⚡ Verilator — fast cycle-accurate simulation</h3>
+    <div class="code-block">
+      <div class="code-head"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div><div class="code-label">verilator</div></div>
+      <div class="code-body">
+        <div><span class="cmt"># Lint only (much faster feedback than full simulation)</span></div>
+        <div><span class="p">❯</span> <span class="cmd">verilator</span> <span class="arg">--lint-only -Wall top.v</span></div>
+        <div>&nbsp;</div>
+        <div><span class="cmt"># Compile to C++ for fast simulation</span></div>
+        <div><span class="p">❯</span> <span class="cmd">verilator</span> <span class="arg">--cc top.v --exe tb.cpp --build</span></div>
+        <div><span class="p">❯</span> <span class="cmd">./obj_dir/Vtop</span></div>
+      </div>
+    </div>
+    <p style="font-size:12px;color:var(--subtext0);margin-top:8px"><strong>Why Verilator:</strong> For large designs, it's 100x faster than iverilog. Use iverilog for quick tests, Verilator for serious simulation.</p>
+  </div>
+
+  <div class="wide">
+    <h3>🔧 Yosys — Synthesis</h3>
+    <div class="code-block">
+      <div class="code-head"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div><div class="code-label">synthesis</div></div>
+      <div class="code-body">
+        <div><span class="cmt"># Interactive mode</span></div>
+        <div><span class="p">❯</span> <span class="cmd">yosys</span></div>
+        <div><span class="out">yosys> read_verilog top.v</span></div>
+        <div><span class="out">yosys> synth_ice40 -top top</span></div>
+        <div><span class="out">yosys> write_json top.json</span></div>
+        <div>&nbsp;</div>
+        <div><span class="cmt"># Script mode (typical in Makefiles)</span></div>
+        <div><span class="p">❯</span> <span class="cmd">yosys</span> <span class="arg">-p "synth_ice40 -top top; write_json top.json" top.v</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wide">
+    <h3>⚙️ RISC-V Toolchain</h3>
+    <div class="code-block">
+      <div class="code-head"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div><div class="code-label">cross-compilation</div></div>
+      <div class="code-body">
+        <div><span class="p">❯</span> <span class="cmd">riscv-gcc</span> <span class="arg">-march=rv32i -mabi=ilp32 main.c -o main.elf</span></div>
+        <div><span class="p">❯</span> <span class="cmd">riscv-obj</span> <span class="arg">-d main.elf</span>  <span class="cmt"># disassemble</span></div>
+        <div><span class="p">❯</span> <span class="cmd">riscv-nm</span>  <span class="arg">main.elf</span>  <span class="cmt"># list symbols</span></div>
+      </div>
+    </div>
+    <p style="font-size:12px;color:var(--subtext0);margin-top:8px"><code>riscv-gcc</code> is an alias for <code>riscv64-unknown-elf-gcc</code></p>
+  </div>
+
+  <div class="wide">
+    <h3>🛠️ Hardware Math Helpers</h3>
+    <div class="code-block">
+      <div class="code-head"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div><div class="code-label">quick calculations</div></div>
+      <div class="code-body">
+        <div><span class="p">❯</span> <span class="cmd">bits</span> <span class="arg">0xFF</span>        <span class="out">→ 0b11111111</span></div>
+        <div><span class="p">❯</span> <span class="cmd">bits</span> <span class="arg">0xDEAD</span>      <span class="out">→ 0b1101111010101101</span></div>
+        <div><span class="p">❯</span> <span class="cmd">calc</span> <span class="arg">"2**32"</span>      <span class="out">→ 4294967296</span></div>
+        <div><span class="p">❯</span> <span class="cmd">calc</span> <span class="arg">"1e9 / 50e6"</span> <span class="out">→ 20.0  (period of 50MHz clock in ns)</span></div>
+        <div><span class="p">❯</span> <span class="cmd">hex</span>  <span class="arg">firmware.bin</span> <span class="cmt"># syntax-highlighted hex dump</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ PYTHON -->
+<div id="python" class="sec">
+  <div class="sec-head">
+    <div class="sec-icon bg-yellow">🐍</div>
+    <div><h2>Python Setup</h2><p>Three separate contexts — never break your system Python again</p></div>
+  </div>
+
+  <div class="callout yellow"><strong>Why three contexts?</strong> macOS Homebrew locks the system Python. Using separate envs prevents conflicts, keeps tools isolated, and means one broken install can't nuke everything else.</div>
+
+  <div class="cards">
+    <div class="card" style="grid-column:1/-1">
+      <div class="card-top"><div class="c-icon bg-yellow">🧪</div><h3>CE Environment (~/.ce-env) — Python 3.12</h3></div>
+      <div class="why">Your main scientific/hardware Python env. Has numpy, scipy, matplotlib, cocotb, pandas, wavedrom.</div>
+      <div class="code-block">
+        <div class="code-body">
+          <div><span class="p">❯</span> <span class="cmd">ce</span>          <span class="cmt"># activate CE env (alias)</span></div>
+          <div><span class="ok">✓ CE Python env active (numpy/scipy/cocotb)</span></div>
+          <div><span class="p">(ce-env) ❯</span> <span class="cmd">python3 -c "import numpy; print(numpy.__version__)"</span></div>
+          <div><span class="out">2.x.x</span></div>
+          <div><span class="p">(ce-env) ❯</span> <span class="cmd">deactivate</span> <span class="cmt"># leave the env</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-top"><div class="c-icon bg-peach">📓</div><h3>JupyterLab</h3></div>
+      <div class="why">Installed via pipx — always available regardless of what venv is active.</div>
+      <p style="font-size:12px;color:var(--subtext0)"><code>jlab</code> → opens in browser<br>Select <strong>"CE Python 3.12"</strong> kernel for numpy/cocotb access</p>
+    </div>
+    <div class="card">
+      <div class="card-top"><div class="c-icon bg-teal">📦</div><h3>Per-project venv</h3></div>
+      <div class="why">For class projects or anything with specific dependencies you don't want globally.</div>
+      <p style="font-size:12px;color:var(--subtext0)"><code>venv</code> → creates + activates <code>.venv/</code> in current dir<br><code>activate</code> → re-activate an existing project venv<br><code>deactivate</code> → leave it</p>
+    </div>
+  </div>
+
+  <div class="wide" style="margin-top:14px">
+    <h3>📊 Useful CE Python — Quick Examples</h3>
+    <div class="code-block">
+      <div class="code-head"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div><div class="code-label">after running: ce</div></div>
+      <div class="code-body">
+        <div><span class="cmt"># Plot a signal</span></div>
+        <div><span class="cmd">import</span> <span class="arg">numpy as np, matplotlib.pyplot as plt</span></div>
+        <div><span class="cmd">t</span> = np.linspace(0, 1, 1000)</div>
+        <div><span class="cmd">plt.plot(t, np.sin(2*np.pi*50*t))  </span><span class="cmt"># 50Hz sine</span></div>
+        <div><span class="cmd">plt.show()</span></div>
+        <div>&nbsp;</div>
+        <div><span class="cmt"># Clock period / frequency calculations</span></div>
+        <div><span class="p">❯</span> <span class="cmd">calc</span> <span class="arg">"1 / 100e6 * 1e9"</span>  <span class="out">→ 10.0 ns  (100MHz period)</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ CAD & 3D -->
+<div id="cad" class="sec">
+  <div class="sec-head">
+    <div class="sec-icon bg-sapphire">🧊</div>
+    <div><h2>CAD & 3D Modeling</h2><p>Parametric enclosure design with CadQuery — code → STEP/STL</p></div>
+  </div>
+
+  <div class="callout blue"><strong>What is CadQuery?</strong> A Python library that lets you write parametric 3D models as code. Change a variable, re-run the script, and get a new STEP/STL file. No GUI needed — but you can view results in Onshape (browser) or FreeCAD (desktop).</div>
+
+  <div class="cards">
+    <div class="card">
+      <span class="badge b-must">Core</span>
+      <div class="card-top"><div class="c-icon bg-sapphire">🧊</div><h3>CadQuery</h3></div>
+      <div class="why">Parametric CAD-as-code. Generates STEP, STL, DXF from Python scripts. Built on OpenCascade (OCP) geometry kernel.</div>
+      <p style="font-size:12px;color:var(--subtext0)"><code>pip install cadquery</code></p>
+    </div>
+    <div class="card">
+      <span class="badge b-cool">Viewer</span>
+      <div class="card-top"><div class="c-icon bg-teal">🌐</div><h3>Onshape</h3></div>
+      <div class="why">Free browser-based CAD. Import STEP files to view, measure, and edit your models. No install required.</div>
+      <p style="font-size:12px;color:var(--subtext0)"><a href="https://www.onshape.com" style="color:var(--blue)">onshape.com</a> — create free account → Import → upload .step</p>
+    </div>
+    <div class="card">
+      <span class="badge b-cool">Viewer</span>
+      <div class="card-top"><div class="c-icon bg-green">🖥️</div><h3>FreeCAD</h3></div>
+      <div class="why">Open-source desktop CAD. Full parametric editing, assembly tools, FEM analysis. Get the Apple Silicon build.</div>
+      <p style="font-size:12px;color:var(--subtext0)"><code>brew install --cask freecad</code></p>
+    </div>
+    <div class="card">
+      <span class="badge b-hdl">Optional</span>
+      <div class="card-top"><div class="c-icon bg-mauve">👁️</div><h3>CQ-Editor</h3></div>
+      <div class="why">CadQuery's own GUI — live 3D preview while editing Python scripts. Can be finicky on Apple Silicon.</div>
+      <p style="font-size:12px;color:var(--subtext0)"><code>pip install cq-editor</code> then <code>cq-editor</code></p>
+    </div>
+  </div>
+
+  <div class="wide" style="margin-top:18px">
+    <h3>🛠️ Setup — Per-Project venv (Recommended)</h3>
+    <div class="code-block">
+      <div class="code-head"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div><div class="code-label">one-time setup for a CAD project</div></div>
+      <div class="code-body">
+        <div><span class="cmt"># 1. Create project folder</span></div>
+        <div><span class="p">❯</span> <span class="cmd">mkcd</span> <span class="arg">sentinel-enclosure</span></div>
+        <div>&nbsp;</div>
+        <div><span class="cmt"># 2. Create a venv and activate it</span></div>
+        <div><span class="p">❯</span> <span class="cmd">python3 -m venv</span> <span class="arg">venv</span></div>
+        <div><span class="p">❯</span> <span class="cmd">source</span> <span class="arg">venv/bin/activate</span></div>
+        <div><span class="ok">(venv) ❯</span></div>
+        <div>&nbsp;</div>
+        <div><span class="cmt"># 3. Install CadQuery</span></div>
+        <div><span class="p">(venv) ❯</span> <span class="cmd">pip install</span> <span class="arg">cadquery</span></div>
+        <div><span class="out">Successfully installed cadquery-2.4.0 cadquery-ocp-7.7.2 ...</span></div>
+      </div>
+    </div>
+
+    <div class="callout yellow" style="margin-top:12px"><strong>Apple Silicon note:</strong> If <code>pip install cadquery</code> fails with a build error on <code>cadquery-ocp</code>, use conda instead:<br><br>
+      <code>conda create -n sentinel python=3.11 -y &amp;&amp; conda activate sentinel</code><br>
+      <code>conda install -c conda-forge cadquery -y</code>
+    </div>
+  </div>
+
+  <div class="wide" style="margin-top:18px">
+    <h3>🚀 Daily Workflow</h3>
+    <div class="code-block">
+      <div class="code-head"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div><div class="code-label">every time you want to work on the model</div></div>
+      <div class="code-body">
+        <div><span class="cmt"># Activate the project env</span></div>
+        <div><span class="p">❯</span> <span class="cmd">cd</span> <span class="arg">~/sentinel-enclosure</span></div>
+        <div><span class="p">❯</span> <span class="cmd">source</span> <span class="arg">venv/bin/activate</span></div>
+        <div>&nbsp;</div>
+        <div><span class="cmt"># Edit parameters in the script (any text editor)</span></div>
+        <div><span class="p">(venv) ❯</span> <span class="cmd">code</span> <span class="arg">sentinel_enclosure.py</span>  <span class="cmt"># or nano, vim, etc.</span></div>
+        <div>&nbsp;</div>
+        <div><span class="cmt"># Regenerate the model</span></div>
+        <div><span class="p">(venv) ❯</span> <span class="cmd">python</span> <span class="arg">sentinel_enclosure.py</span></div>
+        <div><span class="out">Building Sentinel enclosure...</span></div>
+        <div><span class="out">  Outer dimensions: 174.0 x 112.0 x 51.0 mm</span></div>
+        <div><span class="ok">Done! Files saved: sentinel_base.step, sentinel_lid.step, ...</span></div>
+        <div>&nbsp;</div>
+        <div><span class="cmt"># View: drag .step into Onshape, or open in FreeCAD</span></div>
+        <div><span class="p">(venv) ❯</span> <span class="cmd">open</span> <span class="arg">sentinel_base.step</span>  <span class="cmt"># opens in FreeCAD if installed</span></div>
+        <div>&nbsp;</div>
+        <div><span class="cmt"># When done</span></div>
+        <div><span class="p">(venv) ❯</span> <span class="cmd">deactivate</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wide" style="margin-top:18px">
+    <h3>📐 CadQuery Essentials — Quick Reference</h3>
+    <table class="cmd-table">
+      <tr><th>Concept</th><th>Code</th><th>What it does</th></tr>
+      <tr><td class="k">Start a shape</td><td class="n"><code>cq.Workplane("XY").box(L, W, H)</code></td><td class="n">Create a box on the XY plane</td></tr>
+      <tr><td class="k">Hollow it out</td><td class="n"><code>.shell(-wall)</code></td><td class="n">Shell a solid (negative = inward)</td></tr>
+      <tr><td class="k">Cut a hole</td><td class="n"><code>.circle(r).cutThruAll()</code></td><td class="n">Cut a circular hole through entire part</td></tr>
+      <tr><td class="k">Add fillets</td><td class="n"><code>.edges("|Z").fillet(r)</code></td><td class="n">Round vertical edges by radius r</td></tr>
+      <tr><td class="k">Boolean subtract</td><td class="n"><code>base.cut(other_shape)</code></td><td class="n">Subtract one body from another</td></tr>
+      <tr><td class="k">Boolean add</td><td class="n"><code>base.union(boss)</code></td><td class="n">Merge two bodies together</td></tr>
+      <tr><td class="k">Move workplane</td><td class="n"><code>.workplane(offset=10)</code></td><td class="n">Shift the working plane up 10mm</td></tr>
+      <tr><td class="k">Position</td><td class="n"><code>.center(x, y)</code></td><td class="n">Move cursor to (x,y) on workplane</td></tr>
+      <tr><td class="k">Export STEP</td><td class="n"><code>cq.exporters.export(part, "file.step")</code></td><td class="n">Save as editable CAD file</td></tr>
+      <tr><td class="k">Export STL</td><td class="n"><code>cq.exporters.export(part, "file.stl")</code></td><td class="n">Save as 3D-print-ready mesh</td></tr>
+    </table>
+  </div>
+
+  <div class="wide" style="margin-top:18px">
+    <h3>📦 File Formats — What's What</h3>
+    <table class="cmd-table">
+      <tr><th>Format</th><th>Extension</th><th>Use for</th></tr>
+      <tr><td class="k">STEP</td><td class="n"><code>.step</code></td><td class="n">Universal editable CAD. Open in Onshape, FreeCAD, Fusion 360, SolidWorks. <strong>This is your source of truth.</strong></td></tr>
+      <tr><td class="k">STL</td><td class="n"><code>.stl</code></td><td class="n">3D printing. Load into Cura, PrusaSlicer, BambuStudio. Triangle mesh — not editable.</td></tr>
+      <tr><td class="k">DXF</td><td class="n"><code>.dxf</code></td><td class="n">2D profiles for laser cutting. CadQuery can export these too.</td></tr>
+      <tr><td class="k">OBJ</td><td class="n"><code>.obj</code></td><td class="n">3D mesh with materials. Common in rendering/game engines.</td></tr>
+    </table>
+  </div>
+
+  <div class="wide" style="margin-top:18px">
+    <h3>🔧 Editing Your Enclosure Parameters</h3>
+    <div class="code-block">
+      <div class="code-head"><div class="dot dr"></div><div class="dot dy"></div><div class="dot dg"></div><div class="code-label">sentinel_enclosure.py — top of file</div></div>
+      <div class="code-body">
+        <div><span class="cmt"># --- Overall Enclosure ---</span></div>
+        <div><span class="cmd">WALL</span> = <span class="arg">3.0</span>                  <span class="cmt"># Wall thickness (mm)</span></div>
+        <div><span class="cmd">CORNER_RADIUS</span> = <span class="arg">3.0</span>         <span class="cmt"># External corner rounding</span></div>
+        <div>&nbsp;</div>
+        <div><span class="cmt"># --- Battery Compartment ---</span></div>
+        <div><span class="cmd">BATT_L</span> = <span class="arg">100.0</span>              <span class="cmt"># Battery bay length</span></div>
+        <div><span class="cmd">BATT_W</span> = <span class="arg">60.0</span>               <span class="cmt"># Battery bay width</span></div>
+        <div><span class="cmd">BATT_H</span> = <span class="arg">25.0</span>               <span class="cmt"># Battery bay height</span></div>
+        <div>&nbsp;</div>
+        <div><span class="cmt"># --- Lid Features ---</span></div>
+        <div><span class="cmd">OLED_W</span> = <span class="arg">30.0</span>               <span class="cmt"># OLED window width</span></div>
+        <div><span class="cmd">PWR_BTN_DIA</span> = <span class="arg">12.0</span>          <span class="cmt"># Power button hole diameter</span></div>
+        <div>&nbsp;</div>
+        <div><span class="yl">Change any value → save → re-run → new STEP/STL generated</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout green" style="margin-top:14px"><strong>Pro tip:</strong> Keep your <code>sentinel_enclosure.py</code> in a git repo. Every time you tweak dimensions and regenerate, commit the script — the STEP/STL files can always be regenerated from it. Track the code, not the binary.</div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════ FUNCTIONS -->
+<div id="functions" class="sec">
+  <div class="sec-head">
+    <div class="sec-icon bg-peach">⚡</div>
+    <div><h2>Custom Functions & Aliases</h2><p>All defined in your ~/.zshrc — use them anywhere</p></div>
+  </div>
+
+  <div class="wide">
+    <h3>🗂️ Navigation & File Management</h3>
+    <table class="cmd-table">
+      <tr><th>Command</th><th>What it does</th><th>Example</th></tr>
+      <tr><td class="k">mkcd name</td><td class="v">Make directory and cd into it</td><td class="n"><code>mkcd my-project</code></td></tr>
+      <tr><td class="k">extract file</td><td class="v">Auto-detects and extracts any archive</td><td class="n"><code>extract lab3.tar.gz</code></td></tr>
+      <tr><td class="k">..</td><td class="v">cd ..</td><td class="n">Go up one directory</td></tr>
+      <tr><td class="k">...</td><td class="v">cd ../..</td><td class="n">Go up two directories</td></tr>
+      <tr><td class="k">-</td><td class="v">cd to previous directory</td><td class="n">Toggle between two dirs</td></tr>
+      <tr><td class="k">tree</td><td class="v">Show directory tree</td><td class="n"><code>tree src/</code></td></tr>
+    </table>
+  </div>
+
+  <div class="wide">
+    <h3>🔧 System Utilities</h3>
+    <table class="cmd-table">
+      <tr><th>Command</th><th>What it does</th></tr>
+      <tr><td class="k">reload</td><td class="n">Re-source ~/.zshrc without restarting terminal</td></tr>
+      <tr><td class="k">top</td><td class="n">Opens btop — graphical CPU/RAM/network monitor</td></tr>
+      <tr><td class="k">ports</td><td class="n">Show all active listening TCP ports</td></tr>
+      <tr><td class="k">path</td><td class="n">Print $PATH one entry per line (numbered)</td></tr>
+      <tr><td class="k">sysinfo</td><td class="n">Show fastfetch system info banner</td></tr>
+      <tr><td class="k">myip</td><td class="n">Show your public IP address</td></tr>
+      <tr><td class="k">tldr [command]</td><td class="n">Simplified practical man page — e.g. <code>tldr tmux</code></td></tr>
+    </table>
+  </div>
+
+  <div class="wide">
+    <h3>🖥️ tmux Quick Reference</h3>
+    <table class="cmd-table">
+      <tr><th>Command</th><th>What it does</th></tr>
+      <tr><td class="k">tmn name</td><td class="n">New named session</td></tr>
+      <tr><td class="k">tma name</td><td class="n">Attach to existing session</td></tr>
+      <tr><td class="k">tml</td><td class="n">List all sessions</td></tr>
+      <tr><td class="k">tmk name</td><td class="n">Kill a session</td></tr>
+      <tr><td class="k"><kbd>Ctrl+B</kbd> <kbd>%</kbd></td><td class="n">Vertical split pane</td></tr>
+      <tr><td class="k"><kbd>Ctrl+B</kbd> <kbd>"</kbd></td><td class="n">Horizontal split pane</td></tr>
+      <tr><td class="k"><kbd>Ctrl+B</kbd> <kbd>arrow keys</kbd></td><td class="n">Switch between panes</td></tr>
+      <tr><td class="k"><kbd>Ctrl+B</kbd> <kbd>d</kbd></td><td class="n">Detach session (keeps it running)</td></tr>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ APPS -->
+<div id="apps" class="sec">
+  <div class="sec-head">
+    <div class="sec-icon bg-sapphire">📱</div>
+    <div><h2>macOS Apps</h2><p>Installed apps that run outside the terminal</p></div>
+  </div>
+
+  <div class="cards">
+    <div class="card">
+      <span class="badge b-must">Open it now</span>
+      <div class="card-top"><div class="c-icon bg-teal">▭</div><h3>Rectangle</h3></div>
+      <div class="why"><strong>Why:</strong> Window snapping with keyboard shortcuts. Side-by-side GTKWave + VS Code is essential for hardware work.</div>
+      <table class="cmd-table" style="margin-top:4px">
+        <tr><td class="k"><kbd>⌘⌥←</kbd></td><td class="n">Left half</td></tr>
+        <tr><td class="k"><kbd>⌘⌥→</kbd></td><td class="n">Right half</td></tr>
+        <tr><td class="k"><kbd>⌘⌥↑</kbd></td><td class="n">Top half</td></tr>
+        <tr><td class="k"><kbd>⌘⌥F</kbd></td><td class="n">Full screen</td></tr>
+      </table>
+    </div>
+    <div class="card">
+      <span class="badge b-must">Open it now</span>
+      <div class="card-top"><div class="c-icon bg-blue">📊</div><h3>Stats</h3></div>
+      <div class="why"><strong>Why:</strong> Live CPU, RAM, GPU, network in your menu bar. Immediately see when Verilator or Yosys synthesis is maxing your M1 Max.</div>
+      <p style="font-size:12px;color:var(--subtext0)">Open from Applications → Stats. Right-click the menu bar icons to customize what's shown.</p>
+    </div>
+    <div class="card">
+      <div class="card-top"><div class="c-icon bg-green">📐</div><h3>KiCad</h3></div>
+      <div class="why"><strong>Why:</strong> PCB schematic capture and layout tool. If any project or capstone work involves making actual PCBs, this is the standard open-source tool.</div>
+    </div>
+    <div class="card">
+      <div class="card-top"><div class="c-icon bg-mauve">💙</div><h3>VS Code Extensions</h3></div>
+      <div class="why">Extensions installed: <strong>Verilog HDL</strong>, <strong>TerosHDL</strong> (state machine diagrams, auto-docs), <strong>Error Lens</strong> (inline errors), <strong>Catppuccin theme</strong>, Remote SSH, Jupyter.</div>
+      <p style="font-size:12px;color:var(--subtext0);margin-top:6px">In VS Code: <kbd>Cmd+Shift+P</kbd> → "Color Theme" → Catppuccin Mocha</p>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════ CHEAT SHEET -->
+<div id="cheatsheet" class="sec">
+  <div class="sec-head">
+    <div class="sec-icon bg-red">📋</div>
+    <div><h2>Master Cheat Sheet</h2><p>Everything on one page — print this or keep it open</p></div>
+  </div>
+
+  <div class="wide">
+    <h3>🔌 Hardware / EDA</h3>
+    <table class="cmd-table">
+      <tr><td class="k">vrun a.v b.v</td><td class="n">Compile + run Verilog (iverilog+vvp)</td></tr>
+      <tr><td class="k">vsim a.v b.v</td><td class="n">Compile + run + open GTKWave automatically</td></tr>
+      <tr><td class="k">vlint a.v</td><td class="n">Verilator lint check (fast error detection)</td></tr>
+      <tr><td class="k">gtkwave file.vcd</td><td class="n">Open waveform viewer</td></tr>
+      <tr><td class="k">yosys</td><td class="n">Open synthesis shell</td></tr>
+      <tr><td class="k">riscv-gcc file.c -o out</td><td class="n">RISC-V cross-compile</td></tr>
+      <tr><td class="k">bits 0xBEEF</td><td class="n">Hex → binary</td></tr>
+      <tr><td class="k">calc "2**16"</td><td class="n">Quick math (supports sin/cos/log)</td></tr>
+      <tr><td class="k">hex file.bin</td><td class="n">Highlighted hex dump</td></tr>
+    </table>
+  </div>
+
+  <div class="wide">
+    <h3>📁 Files & Search</h3>
+    <table class="cmd-table">
+      <tr><td class="k">ll</td><td class="n">Detailed file list with icons + git status</td></tr>
+      <tr><td class="k">lt / ltt</td><td class="n">Tree view (2 / 3 levels)</td></tr>
+      <tr><td class="k">cat file</td><td class="n">Syntax-highlighted file view (bat)</td></tr>
+      <tr><td class="k">rg "pattern"</td><td class="n">Fast recursive grep</td></tr>
+      <tr><td class="k">fd "*.v"</td><td class="n">Fast file finder</td></tr>
+      <tr><td class="k">Ctrl+R</td><td class="n">Fuzzy command history search</td></tr>
+      <tr><td class="k">Ctrl+T</td><td class="n">Fuzzy file finder → insert path</td></tr>
+      <tr><td class="k">Alt+C</td><td class="n">Fuzzy directory jump</td></tr>
+      <tr><td class="k">mkcd name</td><td class="n">mkdir + cd in one step</td></tr>
+      <tr><td class="k">extract file</td><td class="n">Auto-extract any archive format</td></tr>
+    </table>
+  </div>
+
+  <div class="wide">
+    <h3>🌿 Git</h3>
+    <table class="cmd-table">
+      <tr><td class="k">lg</td><td class="n">lazygit — full TUI (recommended for daily use)</td></tr>
+      <tr><td class="k">gs</td><td class="n">git status (compact)</td></tr>
+      <tr><td class="k">gaa → gc "msg" → gp</td><td class="n">Stage all → commit → push</td></tr>
+      <tr><td class="k">glo</td><td class="n">Visual branch/history graph</td></tr>
+      <tr><td class="k">gd / gds</td><td class="n">Diff unstaged / staged (rendered beautifully)</td></tr>
+      <tr><td class="k">gcb branch-name</td><td class="n">New branch + switch</td></tr>
+      <tr><td class="k">gst / gstp</td><td class="n">Stash / pop stash</td></tr>
+    </table>
+  </div>
+
+  <div class="wide">
+    <h3>🐍 Python</h3>
+    <table class="cmd-table">
+      <tr><td class="k">ce</td><td class="n">Activate CE Python 3.12 env (numpy, scipy, cocotb, etc.)</td></tr>
+      <tr><td class="k">deactivate</td><td class="n">Leave the active venv</td></tr>
+      <tr><td class="k">jlab</td><td class="n">Launch JupyterLab in browser</td></tr>
+      <tr><td class="k">venv</td><td class="n">Create + activate project venv in current dir</td></tr>
+      <tr><td class="k">py</td><td class="n">python3</td></tr>
+    </table>
+  </div>
+
+  <div class="wide">
+    <h3>🧊 CAD & 3D</h3>
+    <table class="cmd-table">
+      <tr><td class="k">cd ~/sentinel-enclosure && source venv/bin/activate</td><td class="n">Activate CAD project env</td></tr>
+      <tr><td class="k">python sentinel_enclosure.py</td><td class="n">Regenerate STEP + STL from parameters</td></tr>
+      <tr><td class="k">open file.step</td><td class="n">Open in FreeCAD (if installed)</td></tr>
+      <tr><td class="k">cq.exporters.export(part, "out.step")</td><td class="n">Export editable STEP in script</td></tr>
+      <tr><td class="k">cq.exporters.export(part, "out.stl")</td><td class="n">Export printable STL in script</td></tr>
+    </table>
+  </div>
+
+  <div class="wide">
+    <h3>🖥️ Terminal & System</h3>
+    <table class="cmd-table">
+      <tr><td class="k">reload</td><td class="n">Re-source ~/.zshrc</td></tr>
+      <tr><td class="k">top</td><td class="n">btop — graphical system monitor</td></tr>
+      <tr><td class="k">tmn / tma / tml</td><td class="n">tmux: new / attach / list sessions</td></tr>
+      <tr><td class="k">tldr [cmd]</td><td class="n">Practical man page summary</td></tr>
+      <tr><td class="k">ports</td><td class="n">Show listening ports</td></tr>
+      <tr><td class="k">sysinfo</td><td class="n">Show fastfetch system banner</td></tr>
+    </table>
+  </div>
+
+  <div class="callout green" style="margin-top:20px">
+    <strong>Pro tip:</strong> Your <code>~/.zshrc</code> is the source of all aliases and functions. Run <code>cat ~/.zshrc</code> anytime to see everything, or <code>reload</code> after editing it to apply changes instantly.
+  </div>
+</div>
+
+</div><!-- /container -->
+
+<footer>
+  Noah · UCSC Computer Engineering · Digital Hardware · M1 Max MacBook Pro<br>
+  <span style="color:var(--surface2)">Built March 2026 · Catppuccin Mocha · Starship · iTerm2 · zsh</span>
+</footer>
+
+</body>
+</html>

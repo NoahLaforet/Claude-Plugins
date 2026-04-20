@@ -1,0 +1,52 @@
+{
+  "statusLine": {
+    "type": "command",
+    "command": "python3 /Users/YOURNAME/.claude/statusline.py",
+    "padding": 0,
+    "refreshInterval": 1
+  },
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "printf thinking > /Users/YOURNAME/.claude/.busy"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/Users/YOURNAME/.claude/hooks/busy_tool.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "printf thinking > /Users/YOURNAME/.claude/.busy"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "rm -f /Users/YOURNAME/.claude/.busy"
+          }
+        ]
+      }
+    ]
+  }
+}
