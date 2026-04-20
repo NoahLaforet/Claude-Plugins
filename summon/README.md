@@ -1,5 +1,7 @@
 # Summon
 
+![Summon menu-bar states](docs/demo.gif)
+
 A macOS menu-bar companion for Claude Code. Two integrated features:
 
 1. **Double-clap launcher** — opens a new iTerm2 Claude Code session when you double-clap.
