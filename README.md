@@ -2,12 +2,13 @@
 
 A personal toolkit of macOS customizations for [Claude Code](https://claude.com/claude-code) — the things I built to make my own workflow faster, and because Claude Code was missing the UI polish I wanted. Everything is Python / shell, all drop-in, all independent.
 
-Two plugins, one repo:
+Three plugins, one repo:
 
 | Tool | What it does | Primary files |
 |---|---|---|
 | **[summon/](summon/)** | Menu-bar companion: opens a new Claude session on **double-clap**, and Caps Lock **voice dictation** to paste transcripts into the focused window (or auto-launch Claude for the queue) | `summon.py`, `dictate.py`, launchd plist, AppleScript launcher |
 | **[statusbar/](statusbar/)** | A three-line Claude Code status line showing live context usage, session cost, plan-budget tracking, burn rate, and a spinner that surfaces the active tool | `statusline.py`, `busy_tool.sh`, `settings.example.json` |
+| **[usage-today/](usage-today/)** | A `/usage-today` slash command that prints a full-day readout: cost, active time, tokens, cache-reuse %, per-project breakdown, and top tools — aggregated across every session you opened today | `usage_today.py`, `usage-today.md`, `install.sh` |
 
 Each folder has its own `README.md` with install steps, tuning knobs, and screenshots where relevant.
 
@@ -39,6 +40,11 @@ chmod +x ~/.claude/statusline.py
 mkdir -p ~/.claude/hooks
 cp statusbar/busy_tool.sh ~/.claude/hooks/busy_tool.sh
 # Then merge statusbar/settings.example.json into ~/.claude/settings.json
+
+# 3. /usage-today slash command — one-command installer
+cd ../usage-today
+./install.sh
+cd ..
 ```
 
 What `summon/install.sh` does:
@@ -72,7 +78,8 @@ claude-plugins/
 ├── LICENSE                    MIT
 ├── .gitignore                 excludes venv/, models, logs, build artifacts
 ├── summon/                    menu bar app — double-clap + dictate
-└── statusbar/                 Claude Code three-line status line
+├── statusbar/                 Claude Code three-line status line
+└── usage-today/               /usage-today slash command — full-day stats
 ```
 
 ---
