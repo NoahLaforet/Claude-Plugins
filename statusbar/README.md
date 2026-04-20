@@ -7,9 +7,9 @@ shows what Claude is doing in real time.
 ## What it looks like
 
 ```
-Opus 4.7  effort: xhigh │ context: [████░░] 70% 281K left │ month: $557/$100 557% │ ⠧ Bash
-$2.150 $5.2/hr 25m │ input: 20.4M output: 445K reused: 95% │ ⎇ main ●3 │ you: 24 claude: 209
-today: $66 │ time: 3h48m │ week: $557 │ all-time: $558 │ avg-session: $18 │ 7d-tokens: 154M
+Opus 4.7  effort: xhigh │ context: [████░░] 70% 281K left │ month: $XX/$100 XX% │ ⠧ Bash
+$X.XX $X.X/hr 25m │ input: XX.XM output: XXXK reused: XX% │ ⎇ main ●3 │ you: 24 claude: 209
+today: $XX │ time: XhXXm │ week: $XX │ all-time: $XX │ avg-session: $XX │ 7d-tokens: XXM
 ```
 
 Everything updates live — the spinner (`⠏`) cycles every second and shows the
@@ -63,7 +63,7 @@ When idle it shows `○ idle`.
 
 Claude Pro/Max is a flat-rate subscription, but every session still has an
 API-equivalent cost. This tracker shows how much API value you're extracting
-from your subscription — the `month:$550/$100 (551%)` reading means 5.5× the
+from your subscription — a `month:$550/$100 (551%)` reading means 5.5× the
 plan price in API-equivalent usage. It's a way to feel the scale of what
 you're getting and catch unusual burn rates early.
 
