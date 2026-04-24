@@ -7,7 +7,7 @@ shows what Claude is doing in real time.
 ## What it looks like
 
 ```
-Opus 4.7  effort: xhigh │ context: [████░░] 70% 281K left │ month: $XX/$100 XX% │ ⠧ Bash
+Opus 4.7  effort: max │ context: [████░░] 70% 281K left │ month: $XX/$100 XX% │ ⠧ Bash
 $X.XX $X.X/hr 25m │ input: XX.XM output: XXXK reused: XX% │ ⎇ main ●3 │ you: 24 claude: 209
 today: $XX │ time: XhXXm │ week: $XX │ all-time: $XX │ avg-session: $XX │ 7d-tokens: XXM
 ```
@@ -20,7 +20,8 @@ When idle it shows `○ idle`.
 
 **Line 1 — live state**
 - `Opus 4.7` — the active model
-- `effort:xhigh` — reasoning depth (set via `effortLevel` in settings.json)
+- `effort: max` — reasoning depth (set via `effortLevel` in settings.json;
+  accepts `none`, `minimal`, `low`, `medium`, `high`, `xhigh`, `max`)
 - `context:[bar] 70% 281K left` — context window REMAINING. Bar fills with
   how much you have left; green when healthy, red when running out.
   Denominator is 400K for Opus 4.x, 200K otherwise. This is NOT the 5-hour
