@@ -9,7 +9,7 @@ shows what Claude is doing in real time.
 ```
 Opus 4.7  effort: max │ context: [████░░] 70% 281K left │ month: $XX/$100 XX% │ ⠧ Bash
 $X.XX $X.X/hr 25m │ input: XX.XM output: XXXK reused: XX% │ ⎇ main ●3 │ you: 24 claude: 209
-today: $XX │ time: XhXXm │ week: $XX │ all-time: $XX │ avg-session: $XX │ 7d-tokens: XXM
+today: $XX │ time today: XhXXm │ week: $XX │ time week: XhXXm │ all-time: $XX │ avg-session: $XX │ 7d-tokens: XXM
 ```
 
 Everything updates live — the spinner (`⠏`) cycles every second and shows the
@@ -36,9 +36,12 @@ When idle it shows `○ idle`.
 
 **Line 2 — this session** (everything here is since this chat started)
 - `$X.XXX` — session cost (from Claude Code's own `cost.total_cost_usd`)
-- `$X.X/hr` — burn rate (session cost / session hours); green <$3, yellow
-  <$10, red above. Catches a runaway turn in real time.
-- `Xm` — session wall-clock
+- `$X.X/hr` — burn rate (session cost / **active** session time); green
+  <$3, yellow <$10, red above. Catches a runaway turn in real time.
+- `Xm` — **active** session time (AFK-aware). Sums gaps between events
+  shorter than 10 minutes; longer gaps are treated as you stepped away
+  and are skipped, so a terminal left open overnight doesn't inflate the
+  number or tank the burn rate.
 - `input:XM` — tokens sent TO Claude this session: your prompts + attached
   files + tool results + prior conversation re-sent as context.
 - `output:XK` — tokens Claude wrote BACK this session: reply text + tool
@@ -51,10 +54,14 @@ When idle it shows `○ idle`.
 
 **Line 3 — broader tracking**
 - `today:$X` — spend since local midnight
-- `time:XhYYm` — total active time across ALL of today's sessions. Sums
-  gaps between events shorter than 5 minutes; longer gaps are treated as
-  idle and skipped. Green <4h, yellow <8h, orange beyond. Cached 30s.
+- `time today:XhYYm` — total active time across ALL of today's sessions.
+  Sums gaps between events shorter than 10 minutes; longer gaps are
+  treated as AFK and skipped. Green <4h, yellow <8h, orange beyond.
+  Cached 30s.
 - `week:$X` — rolling 7-day spend
+- `time week:XhYYm` — total active time across the rolling last 7 days,
+  same AFK-aware accounting as `time today:`. Green <20h, yellow <40h,
+  orange beyond. Cached 60s.
 - `all-time:$X` — lifetime spend across all Claude Code sessions
 - `avg-session:$X` — average cost per tracked session. Compare to line 2's
   session cost to see if this chat is running hotter/colder than typical.
@@ -154,6 +161,25 @@ The statusline keeps working, it just always shows `○ idle`.
 
 **Reset spend tracking:** delete `~/.claude/.cost_ledger.json`. The next
 refresh re-seeds from your transcripts.
+
+**Reset the active-time counters:** the `time today:` and `time week:`
+fields scan all your transcripts by default — useful, but if you want a
+fresh start (e.g. "I'll measure my Claude usage starting this Monday"),
+write a reset anchor to `~/.claude/.time_anchor.json`:
+
+```bash
+python3 -c "import json,time; \
+open('$HOME/.claude/.time_anchor.json','w').write(json.dumps({'reset_ts': time.time()}))"
+rm -f ~/.claude/.today_time_cache.json ~/.claude/.week_time_cache.json
+```
+
+Both counters will report `0m` immediately and tick up from now. Delete
+the anchor file to revert to "all of today / rolling 7 days".
+
+**Tune the AFK threshold:** edit `IDLE_GAP_S` (default `600`, i.e. 10
+minutes) in `statusline.py`. Gaps between transcript events longer than
+this are treated as you stepping away and don't count toward active
+time or burn rate.
 
 ## Troubleshooting
 

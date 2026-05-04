@@ -18,6 +18,10 @@ CLAUDE_DIR = HOME / ".claude"
 BUSY_FLAG = CLAUDE_DIR / ".busy"
 WEEK_CACHE = CLAUDE_DIR / ".week_cache.json"
 TODAY_TIME_CACHE = CLAUDE_DIR / ".today_time_cache.json"
+WEEK_TIME_CACHE = CLAUDE_DIR / ".week_time_cache.json"
+# Optional reset anchor: if present, today/week active-time only count event
+# timestamps >= reset_ts. Lets you zero out the counters mid-day.
+TIME_ANCHOR = CLAUDE_DIR / ".time_anchor.json"
 COST_LEDGER = CLAUDE_DIR / ".cost_ledger.json"
 SETTINGS = CLAUDE_DIR / "settings.json"
 PROJECTS_ROOT = CLAUDE_DIR / "projects"
@@ -25,6 +29,10 @@ PROJECTS_ROOT = CLAUDE_DIR / "projects"
 CONTEXT_WINDOW = 200_000
 OPUS_4X_CONTEXT_WINDOW = 400_000  # Opus 4.x has extended context headroom before auto-compact
 DEFAULT_MONTH_BUDGET_USD = 100.0
+# Gaps longer than this between events are treated as AFK and not counted
+# toward active time. 10 min — short enough to catch real idleness, long
+# enough to span a typical Claude tool-use burst + a glance away from the screen.
+IDLE_GAP_S = 600
 
 
 def context_window_for(model_id: str) -> int:
@@ -294,35 +302,112 @@ def weekly_tokens() -> int:
     return total
 
 
-def today_work_ms(idle_gap_s: int = 300) -> int:
+def _time_anchor_ts() -> float:
+    """Return the reset-anchor timestamp, or 0 if no anchor is set.
+
+    When set, today/week active-time totals only count event timestamps at
+    or after this value. Lets you zero the counters at any point (e.g.
+    "fresh start this Monday at noon") without throwing away history.
+    """
+    try:
+        if TIME_ANCHOR.exists():
+            return float(json.loads(TIME_ANCHOR.read_text()).get("reset_ts", 0) or 0)
+    except Exception:
+        pass
+    return 0.0
+
+
+def _accumulate_active_ms(stamps: list[float], idle_gap_s: int,
+                          live_now: float | None = None) -> int:
+    """Given a sorted list of event timestamps, sum gaps <= idle_gap_s.
+
+    If `live_now` is provided, the gap from the last stamp up to `live_now`
+    is also counted (when within the AFK threshold) — this makes the live
+    counter tick up between events instead of stalling at the last gap.
+    """
+    if not stamps:
+        return 0
+    total_ms = 0
+    for a, b in zip(stamps, stamps[1:]):
+        gap = b - a
+        if 0 < gap <= idle_gap_s:
+            total_ms += int(gap * 1000)
+    if live_now is not None:
+        gap = live_now - stamps[-1]
+        if 0 < gap <= idle_gap_s:
+            total_ms += int(gap * 1000)
+    return total_ms
+
+
+def session_work_ms(transcript_path: str | None,
+                    idle_gap_s: int = IDLE_GAP_S) -> int:
+    """Active wall-time for the current session, ignoring AFK gaps.
+
+    Walks the current session's transcript in timestamp order and sums only
+    gaps shorter than `idle_gap_s` (10 min default). A long pause with no
+    prompts and no tool use doesn't count — so the session-time field and
+    burn rate reflect time you're actually engaged with Claude, not how
+    long the terminal has been open.
+    """
+    if not transcript_path or not os.path.exists(transcript_path):
+        return 0
+    from datetime import datetime
+    stamps: list[float] = []
+    try:
+        with open(transcript_path) as f:
+            for line in f:
+                try:
+                    evt = json.loads(line)
+                except Exception:
+                    continue
+                ts = evt.get("timestamp")
+                if not ts:
+                    continue
+                try:
+                    t = datetime.fromisoformat(ts.replace("Z", "+00:00")).timestamp()
+                except Exception:
+                    continue
+                stamps.append(t)
+    except Exception:
+        return 0
+    stamps.sort()
+    return _accumulate_active_ms(stamps, idle_gap_s, live_now=time.time())
+
+
+def today_work_ms(idle_gap_s: int = IDLE_GAP_S) -> int:
     """Sum active time across ALL transcripts with activity today.
 
     For each session, walk events in timestamp order and accumulate gaps
-    shorter than `idle_gap_s` (default 5 min). Gaps longer than that are
-    treated as idle (not working) and skipped. Only event timestamps on
-    today's local date contribute.
+    shorter than `idle_gap_s`. Gaps longer than that are treated as AFK
+    and skipped. Only event timestamps on today's local date contribute.
 
     Cached for 30s since scanning every JSONL is expensive at 1s refresh.
     """
+    anchor_ts = _time_anchor_ts()
     try:
         if TODAY_TIME_CACHE.exists() and (time.time() - TODAY_TIME_CACHE.stat().st_mtime) < 30:
             cache = json.loads(TODAY_TIME_CACHE.read_text())
             from datetime import datetime
             today_str = datetime.now().strftime("%Y-%m-%d")
-            if cache.get("date") == today_str:
+            if (cache.get("date") == today_str
+                    and cache.get("idle_gap_s") == idle_gap_s
+                    and cache.get("anchor_ts") == anchor_ts):
                 return int(cache.get("ms", 0))
     except Exception:
         pass
 
     from datetime import datetime
-    now = datetime.now()
-    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0).timestamp()
+    now_dt = datetime.now()
+    now_ts = time.time()
+    today_start = now_dt.replace(hour=0, minute=0, second=0, microsecond=0).timestamp()
     today_end = today_start + 86400
+    # Reset anchor pulls the lower bound forward when it falls within the window.
+    lower = max(today_start, anchor_ts) if anchor_ts else today_start
     total_ms = 0
     try:
         for p in PROJECTS_ROOT.glob("*/*.jsonl"):
             try:
-                if p.stat().st_mtime < today_start:
+                if p.stat().st_mtime < lower:
                     continue
                 stamps: list[float] = []
                 with open(p) as f:
@@ -338,15 +423,15 @@ def today_work_ms(idle_gap_s: int = 300) -> int:
                             t = datetime.fromisoformat(ts.replace("Z", "+00:00")).timestamp()
                         except Exception:
                             continue
-                        if today_start <= t < today_end:
+                        if lower <= t < today_end:
                             stamps.append(t)
                 if len(stamps) < 2:
                     continue
                 stamps.sort()
-                for a, b in zip(stamps, stamps[1:]):
-                    gap = b - a
-                    if 0 < gap <= idle_gap_s:
-                        total_ms += int(gap * 1000)
+                # Trailing live gap only applies if this session is still active
+                # (most recent event is within the AFK threshold of "now").
+                live = now_ts if (now_ts - stamps[-1]) <= idle_gap_s else None
+                total_ms += _accumulate_active_ms(stamps, idle_gap_s, live_now=live)
             except Exception:
                 continue
     except Exception:
@@ -354,9 +439,75 @@ def today_work_ms(idle_gap_s: int = 300) -> int:
 
     try:
         TODAY_TIME_CACHE.write_text(json.dumps({
-            "date": now.strftime("%Y-%m-%d"),
+            "date": now_dt.strftime("%Y-%m-%d"),
             "ms": total_ms,
-            "ts": time.time(),
+            "ts": now_ts,
+            "idle_gap_s": idle_gap_s,
+            "anchor_ts": anchor_ts,
+        }))
+    except Exception:
+        pass
+    return total_ms
+
+
+def week_work_ms(idle_gap_s: int = IDLE_GAP_S) -> int:
+    """Sum active time across all transcripts from the rolling last 7 days.
+
+    Same AFK-aware gap accumulation as `today_work_ms`. Cached 60s — the
+    week window moves slowly so we can afford a longer cache.
+    """
+    anchor_ts = _time_anchor_ts()
+    try:
+        if WEEK_TIME_CACHE.exists() and (time.time() - WEEK_TIME_CACHE.stat().st_mtime) < 60:
+            cache = json.loads(WEEK_TIME_CACHE.read_text())
+            if (cache.get("idle_gap_s") == idle_gap_s
+                    and cache.get("anchor_ts") == anchor_ts):
+                return int(cache.get("ms", 0))
+    except Exception:
+        pass
+
+    from datetime import datetime
+    now_ts = time.time()
+    cutoff = now_ts - 7 * 86400
+    lower = max(cutoff, anchor_ts) if anchor_ts else cutoff
+    total_ms = 0
+    try:
+        for p in PROJECTS_ROOT.glob("*/*.jsonl"):
+            try:
+                if p.stat().st_mtime < lower:
+                    continue
+                stamps: list[float] = []
+                with open(p) as f:
+                    for line in f:
+                        try:
+                            evt = json.loads(line)
+                        except Exception:
+                            continue
+                        ts = evt.get("timestamp")
+                        if not ts:
+                            continue
+                        try:
+                            t = datetime.fromisoformat(ts.replace("Z", "+00:00")).timestamp()
+                        except Exception:
+                            continue
+                        if t >= lower:
+                            stamps.append(t)
+                if len(stamps) < 2:
+                    continue
+                stamps.sort()
+                live = now_ts if (now_ts - stamps[-1]) <= idle_gap_s else None
+                total_ms += _accumulate_active_ms(stamps, idle_gap_s, live_now=live)
+            except Exception:
+                continue
+    except Exception:
+        pass
+
+    try:
+        WEEK_TIME_CACHE.write_text(json.dumps({
+            "ms": total_ms,
+            "ts": now_ts,
+            "idle_gap_s": idle_gap_s,
+            "anchor_ts": anchor_ts,
         }))
     except Exception:
         pass
@@ -605,8 +756,14 @@ def main() -> None:
     budget = float(ledger.get("budget_month_usd") or DEFAULT_MONTH_BUDGET_USD)
     month_pct = 100 * month_usd / budget if budget else 0
 
+    # Active session time — AFK-aware. Replaces Claude Code's wall-clock
+    # `dur_ms`, which counts the terminal being open even when nothing is
+    # happening. Used for both the displayed session duration and the
+    # $/hr burn rate so a long step-away doesn't tank the rate.
+    sess_work_ms = session_work_ms(transcript)
+
     # Derived session metrics
-    burn = (cost_usd / (dur_ms / 3.6e6)) if dur_ms and dur_ms > 60_000 else 0.0
+    burn = (cost_usd / (sess_work_ms / 3.6e6)) if sess_work_ms and sess_work_ms > 60_000 else 0.0
     cache_pct = (sess_cr / sess_in * 100) if sess_in else 0.0
 
     sep = f" {DIM}│{RESET} "
@@ -639,8 +796,8 @@ def main() -> None:
     if burn > 0:
         bc = RED if burn >= 10 else (YELLOW if burn >= 3 else LIME)
         cost_bits.append(f"{bc}${burn:.1f}/hr{RESET}")
-    if dur_ms:
-        cost_bits.append(f"{TEAL}{fmt_dur(dur_ms)}{RESET}")
+    if sess_work_ms:
+        cost_bits.append(f"{TEAL}{fmt_dur(sess_work_ms)}{RESET}")
 
     tok_bits = [
         f"{DIM}input: {RESET}{PURPLE}{fmt_tok(sess_in)}{RESET}",
@@ -683,10 +840,15 @@ def main() -> None:
     avg_session = life_usd / len(paid_sessions) if paid_sessions else 0.0
     work_ms = today_work_ms()
     wt_color = LIME if work_ms < 4 * 3_600_000 else (YELLOW if work_ms < 8 * 3_600_000 else ORANGE)
+    week_work = week_work_ms()
+    # Weekly thresholds are ~5x the daily ones — a typical heavy day is 4-8h,
+    # so a "lots of time spent this week" signal kicks in around 20h.
+    wkt_color = LIME if week_work < 20 * 3_600_000 else (YELLOW if week_work < 40 * 3_600_000 else ORANGE)
     plan_parts = [
         f"{DIM}today: {RESET}{td_color}{fmt_money(today_usd)}{RESET}",
-        f"{DIM}time: {RESET}{wt_color}{fmt_worktime(work_ms)}{RESET}",
+        f"{DIM}time today: {RESET}{wt_color}{fmt_worktime(work_ms)}{RESET}",
         f"{DIM}week: {RESET}{wk_color}{fmt_money(week_usd)}{RESET}",
+        f"{DIM}time week: {RESET}{wkt_color}{fmt_worktime(week_work)}{RESET}",
         f"{DIM}all-time: {RESET}{MAGENTA}{fmt_money(life_usd)}{RESET}",
         f"{DIM}avg-session: {RESET}{TEAL}{fmt_money(avg_session)}{RESET}",
         f"{DIM}7d-tokens: {RESET}{CYAN}{fmt_tok(week)}{RESET}",
