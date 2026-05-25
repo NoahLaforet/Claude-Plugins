@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Runs weekly_audit.py at 21:00 every Sunday.
+     Install:
+       cp templates/com.claude-brain.weekly-audit.plist ~/Library/LaunchAgents/
+       launchctl load ~/Library/LaunchAgents/com.claude-brain.weekly-audit.plist
+     Unload:
+       launchctl unload ~/Library/LaunchAgents/com.claude-brain.weekly-audit.plist
+     Logs: _meta/weekly-audit.log
+
+     BEFORE INSTALLING: replace /path/to/vault with your actual vault path.
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.claude-brain.weekly-audit</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/env</string>
+        <string>python3</string>
+        <string>/path/to/vault/_meta/scripts/weekly_audit.py</string>
+    </array>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>CLAUDE_BRAIN_VAULT</key>
+        <string>/path/to/vault</string>
+    </dict>
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Weekday</key>
+        <integer>0</integer>
+        <key>Hour</key>
+        <integer>21</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+    <key>StandardOutPath</key>
+    <string>/path/to/vault/_meta/weekly-audit.log</string>
+    <key>StandardErrorPath</key>
+    <string>/path/to/vault/_meta/weekly-audit.log</string>
+</dict>
+</plist>

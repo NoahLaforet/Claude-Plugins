@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Runs sync.py every hour to pull new claude.ai chats into the vault.
+     Install:
+       cp templates/com.claude-brain.sync.plist ~/Library/LaunchAgents/
+       launchctl load ~/Library/LaunchAgents/com.claude-brain.sync.plist
+     Unload:
+       launchctl unload ~/Library/LaunchAgents/com.claude-brain.sync.plist
+     Logs: scripts/sync.log
+
+     BEFORE INSTALLING: replace /path/to/vault with your actual vault path.
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.claude-brain.sync</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/env</string>
+        <string>python3</string>
+        <string>/path/to/vault/_meta/scripts/sync.py</string>
+    </array>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>CLAUDE_BRAIN_VAULT</key>
+        <string>/path/to/vault</string>
+    </dict>
+    <key>StartInterval</key>
+    <integer>3600</integer>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>/path/to/vault/_meta/sync.log</string>
+    <key>StandardErrorPath</key>
+    <string>/path/to/vault/_meta/sync.log</string>
+</dict>
+</plist>

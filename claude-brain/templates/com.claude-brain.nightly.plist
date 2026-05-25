@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Runs nightly_reconcile.py at 23:00 every night.
+     Install:
+       cp templates/com.claude-brain.nightly.plist ~/Library/LaunchAgents/
+       launchctl load ~/Library/LaunchAgents/com.claude-brain.nightly.plist
+     Unload:
+       launchctl unload ~/Library/LaunchAgents/com.claude-brain.nightly.plist
+     Logs: _meta/nightly.log
+
+     BEFORE INSTALLING: replace /path/to/vault with your actual vault path.
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.claude-brain.nightly</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/env</string>
+        <string>python3</string>
+        <string>/path/to/vault/_meta/scripts/nightly_reconcile.py</string>
+    </array>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>CLAUDE_BRAIN_VAULT</key>
+        <string>/path/to/vault</string>
+    </dict>
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>23</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+    <key>StandardOutPath</key>
+    <string>/path/to/vault/_meta/nightly.log</string>
+    <key>StandardErrorPath</key>
+    <string>/path/to/vault/_meta/nightly.log</string>
+</dict>
+</plist>

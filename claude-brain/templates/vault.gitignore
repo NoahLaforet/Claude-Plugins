@@ -1,0 +1,18 @@
+# Secrets -- never commit
+_meta/sync_config.json
+scripts/sync_config.json
+
+# Regenerable / churny machine state (keep repo slim + quiet for auto-backup)
+.smart-env/
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+graphify-out/cache/
+
+# OS cruft
+.DS_Store
+**/.DS_Store
+
+# Logs (churn constantly)
+_meta/*.log
+scripts/*.log
+*.log

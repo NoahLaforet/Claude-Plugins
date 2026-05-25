@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Runs git_backup.sh every 15 minutes to push vault changes to a private repo.
+     Install:
+       cp templates/com.claude-brain.gitbackup.plist ~/Library/LaunchAgents/
+       launchctl load ~/Library/LaunchAgents/com.claude-brain.gitbackup.plist
+     Unload:
+       launchctl unload ~/Library/LaunchAgents/com.claude-brain.gitbackup.plist
+     Logs: _meta/gitbackup.log
+
+     BEFORE INSTALLING: replace /path/to/vault with your actual vault path.
+     Prerequisite: git init your vault, add a remote, set up SSH keys.
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.claude-brain.gitbackup</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/path/to/vault/_meta/scripts/git_backup.sh</string>
+    </array>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>CLAUDE_BRAIN_VAULT</key>
+        <string>/path/to/vault</string>
+    </dict>
+    <key>StartInterval</key>
+    <integer>900</integer>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>StandardErrorPath</key>
+    <string>/path/to/vault/_meta/gitbackup.log</string>
+</dict>
+</plist>

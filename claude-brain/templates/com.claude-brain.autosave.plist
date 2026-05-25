@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Runs auto_save.py every 15 minutes to ingest new Claude exports.
+     Install:
+       cp templates/com.claude-brain.autosave.plist ~/Library/LaunchAgents/
+       launchctl load ~/Library/LaunchAgents/com.claude-brain.autosave.plist
+     Unload:
+       launchctl unload ~/Library/LaunchAgents/com.claude-brain.autosave.plist
+     Logs: _meta/auto_save.log
+
+     BEFORE INSTALLING: replace /path/to/vault with your actual vault path.
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.claude-brain.autosave</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/bin/env</string>
+        <string>python3</string>
+        <string>/path/to/vault/_meta/scripts/auto_save.py</string>
+    </array>
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>CLAUDE_BRAIN_VAULT</key>
+        <string>/path/to/vault</string>
+    </dict>
+    <key>StartInterval</key>
+    <integer>900</integer>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>/path/to/vault/_meta/auto_save.log</string>
+    <key>StandardErrorPath</key>
+    <string>/path/to/vault/_meta/auto_save.log</string>
+</dict>
+</plist>

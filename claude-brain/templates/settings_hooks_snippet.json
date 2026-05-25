@@ -1,0 +1,47 @@
+{
+  "_comment": [
+    "Paste the 'hooks' block below into your ~/.claude/settings.json.",
+    "Replace /path/to/scripts with the absolute path to claude-brain/scripts/.",
+    "",
+    "Hook overview:",
+    "  SessionStart  -- ingest new sessions, surface pending classifications,",
+    "                   memory candidates, and checkpoint context.",
+    "  Stop          -- ingest session, heuristic-classify, sync memory.",
+    "  PreCompact    -- write a checkpoint before context is compacted."
+  ],
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/path/to/scripts/session_start_hook.sh"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/path/to/scripts/session_stop_hook.sh"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 /path/to/scripts/precompact_checkpoint.py"
+          }
+        ]
+      }
+    ]
+  }
+}

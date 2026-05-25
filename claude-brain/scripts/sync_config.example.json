@@ -1,0 +1,24 @@
+{
+  "_instructions": [
+    "Rename this file to sync_config.json and fill in session_key.",
+    "",
+    "How to get your session_key:",
+    "  1. Open claude.ai in Chrome/Safari while logged in.",
+    "  2. Open DevTools (Cmd+Opt+I on Mac, F12 on Windows/Linux).",
+    "  3. Application tab -> Storage -> Cookies -> https://claude.ai",
+    "  4. Find the 'sessionKey' row and copy its Value (starts with sk-ant-sid01-).",
+    "  5. Paste it below as the value of session_key.",
+    "",
+    "The cookie expires every ~30 days. When sync.py errors with 401,",
+    "come back and repeat steps 1-5.",
+    "",
+    "org_uuid is auto-discovered on first run -- leave it blank.",
+    "",
+    "anthropic_api_key is optional. If set, newly ingested chats are",
+    "auto-classified using the Anthropic API. You can also set the",
+    "ANTHROPIC_API_KEY environment variable instead."
+  ],
+  "session_key": "sk-ant-sid01-PASTE_YOUR_COOKIE_HERE",
+  "org_uuid": "",
+  "anthropic_api_key": ""
+}
