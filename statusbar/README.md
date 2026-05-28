@@ -20,8 +20,12 @@ When idle it shows `○ idle`.
 
 **Line 1 — live state**
 - `Opus 4.7` — the active model
-- `effort: max` — reasoning depth (set via `effortLevel` in settings.json;
-  accepts `none`, `minimal`, `low`, `medium`, `high`, `xhigh`, `max`)
+- `effort: max` — current reasoning depth. Reads the live session level Claude
+  Code passes to the statusline, so it tracks `/effort` and `--effort` changes
+  (`low`, `medium`, `high`, `xhigh`, `max`). Shows `fast` in fast mode. Note that
+  `max` is session-only — it can't be persisted in `effortLevel` (which caps at
+  `xhigh`), so launch with `claude --effort max` to default to it. Falls back to
+  the persisted `effortLevel` on older Claude Code builds that don't pass effort.
 - `context:[bar] 70% 281K left` — context window REMAINING. Bar fills with
   how much you have left; green when healthy, red when running out.
   Denominator is 400K for Opus 4.x, 200K otherwise. This is NOT the 5-hour

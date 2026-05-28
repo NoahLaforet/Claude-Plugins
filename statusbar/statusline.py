@@ -706,17 +706,34 @@ def busy_indicator() -> str:
 
 
 def effort_from_settings() -> str | None:
+    """Persisted effort from settings.json — fallback for when the live session
+    effort isn't in the statusline payload (older Claude Code builds)."""
     try:
         if SETTINGS.exists():
-            data = json.loads(SETTINGS.read_text())
-            eff = data.get("effortLevel")
-            fast = data.get("fastMode")
-            if fast:
+            sdata = json.loads(SETTINGS.read_text())
+            if sdata.get("fastMode"):
                 return "fast"
-            return eff
+            return sdata.get("effortLevel")
     except Exception:
         pass
     return None
+
+
+def effort_label(data: dict) -> str | None:
+    """Current effort for the header.
+
+    Prefers the live session values Claude Code pipes in on stdin
+    (fast_mode, effort.level) so the bar tracks /effort and --effort changes —
+    including max, a session-only level that never lands in settings.json
+    (effortLevel caps at xhigh). Falls back to the persisted setting when the
+    payload doesn't carry effort.
+    """
+    if data.get("fast_mode"):
+        return "fast"
+    level = (data.get("effort") or {}).get("level")
+    if level:
+        return level
+    return effort_from_settings()
 
 
 def main() -> None:
@@ -745,7 +762,7 @@ def main() -> None:
 
     branch, dirty, dirty_count, ahead, behind = git_info(cwd)
     week = weekly_tokens()
-    effort = effort_from_settings()
+    effort = effort_label(data)
 
     session_id = data.get("session_id") or ""
     ledger = load_ledger()
