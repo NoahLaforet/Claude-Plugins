@@ -7,7 +7,7 @@ tell application "iTerm"
   activate
   create window with default profile
   tell current session of current window
-    write text "claude --dangerously-skip-permissions"
+    write text "claude --effort max --dangerously-skip-permissions"
     delay 3
     write text "1"
   end tell

@@ -245,10 +245,12 @@ def paste_via_cmd_v() -> None:
 # ─────────────────────────── Focus watcher ─────────────────────────── #
 
 def claude_is_running() -> bool:
-    """True if a `claude --dangerously-skip-permissions` process is alive."""
+    """True if a summon-launched `claude … --dangerously-skip-permissions` is alive."""
     try:
         result = subprocess.run(
-            ["pgrep", "-f", "claude --dangerously-skip-permissions"],
+            # Regex, not a literal: matches regardless of flags (e.g. --effort
+            # max) sitting between `claude` and --dangerously-skip-permissions.
+            ["pgrep", "-f", "claude.*dangerously-skip-permissions"],
             capture_output=True, text=True, timeout=2,
         )
         return bool(result.stdout.strip())

@@ -132,7 +132,7 @@ Then remove Microphone + Input Monitoring + Accessibility entries under System S
 
 - The orange mic indicator is a macOS privacy feature — it appears whenever the clap detector is listening **or** a dictation is recording. Toggle the detector off (via menu) to free the mic when not in use.
 - `Summon.app` on Desktop is a one-click trigger that (a) ensures the menu bar service is running via `launchctl kickstart` and (b) opens a new Claude Code session. Use it to revive the menu bar app after an accidental Quit.
-- `launch_claude.sh` auto-sends `1` three seconds after Claude boots to accept `--dangerously-skip-permissions`.
+- `launch_claude.sh` runs `claude --effort max --dangerously-skip-permissions` (both the double-clap launcher and Dictate-for-Claude use it), then auto-sends `1` three seconds later to accept the permissions prompt. `max` is session-only and can't be persisted in settings.json (`effortLevel` caps at `xhigh`), so launching with the flag is how Summon defaults sessions to the highest effort.
 - Any edit to `summon.py` or `dictate.py` is picked up after a kickstart:
   ```bash
   launchctl kickstart -k "gui/$(id -u)/com.summon"
