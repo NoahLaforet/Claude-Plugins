@@ -1,0 +1,38 @@
+{
+  "_comment": "Sanitized Claude Code settings template. The installer replaces __HOME__ with your home directory. Merge this into your real ~/.claude/settings.json; do not commit your real one.",
+  "permissions": {
+    "allow": [
+      "Bash(git fetch *)",
+      "Bash(git clone *)",
+      "WebSearch"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./secrets/**)",
+      "Read(./**/*.pem)",
+      "Read(./**/credentials*)"
+    ],
+    "defaultMode": "default"
+  },
+  "model": "opus",
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 __HOME__/.claude/hooks/skill_router.py",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "python3 __HOME__/.claude/statusline.py",
+    "padding": 0
+  },
+  "theme": "dark"
+}

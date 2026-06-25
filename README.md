@@ -12,6 +12,7 @@ Four components, one repo:
 | **[statusbar/](statusbar/)** | A three-line Claude Code status line showing live context usage, session cost, plan-budget tracking, burn rate, and a spinner that surfaces the active tool | `statusline.py`, `busy_tool.sh`, `settings.example.json` |
 | **[usage-today/](usage-today/)** | A `/usage-today` slash command that prints a full-day readout: cost, active time, tokens, cache-reuse %, per-project breakdown, and top tools, aggregated across every session you opened today | `usage_today.py`, `usage-today.md`, `install.sh` |
 | **[claude-brain/](claude-brain/)** | A sanitized kit for an Obsidian "second brain" pipeline that auto-extracts and classifies your Claude chat history into a knowledge vault, then lets Claude Code cite past conversations through the Obsidian MCP server | `README.md`, `QUICKSTART.md`, `bootstrap.sh`, `scripts/`, launchd plist templates |
+| **[setup/](setup/)** | Portable `~/.claude` config anyone can clone and run. An installer prompts for your name, email, and vault path (home and username auto-detected), then wires in a skill router hook, a `second-brain` and `claude-audit` skill, and a weekly auto-audit that keeps the setup from going stale. Or hand the repo to Claude and it sets up for you | `install.sh`, `SETUP.md`, `settings.example.json`, `CLAUDE.example.md`, `claude-audit/`, `hooks/`, `skills/` |
 
 Each folder has its own `README.md` with install steps, tuning knobs, and screenshots where relevant.
 
@@ -106,7 +107,8 @@ claude-plugins/
 ├── summon/                    menu bar app, double-clap + dictate
 ├── statusbar/                 Claude Code three-line status line
 ├── usage-today/               /usage-today slash command, full-day stats
-└── claude-brain/              sanitized Obsidian "second brain" pipeline kit
+├── claude-brain/              sanitized Obsidian "second brain" pipeline kit
+└── setup/                     portable ~/.claude config: hooks, skills, weekly auto-audit
 ```
 
 ---

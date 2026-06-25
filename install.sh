@@ -11,6 +11,7 @@
 #   ./install.sh --statusbar     # three-line status line + busy hook
 #   ./install.sh --usage-today   # /usage-today slash command
 #   ./install.sh --brain         # Claude Second Brain Obsidian vault bootstrap
+#   ./install.sh --setup         # portable ~/.claude config (hooks, skills, weekly audit)
 #   ./install.sh --no-model      # passed through to summon (skips whisper download)
 set -euo pipefail
 
@@ -30,11 +31,13 @@ Usage:
   ./install.sh [flags]
 
 Flags:
-  --all           Install summon, statusbar, usage-today, and brain.
+  --all           Install summon, statusbar, usage-today, brain, and setup.
   --summon        Install the menu-bar companion (runs summon/install.sh).
   --statusbar     Install the three-line status line and busy hook.
   --usage-today   Install the /usage-today slash command.
   --brain         Bootstrap the Claude Second Brain Obsidian vault.
+  --setup         Install the portable config: hooks, skills, weekly auto-audit
+                  (runs setup/install.sh; prompts for name, email, vault path).
   --no-model      Forwarded to summon; skips the ~1.6 GB whisper model download.
   --help          Print this help and exit.
 
@@ -50,6 +53,7 @@ DO_SUMMON=0
 DO_STATUSBAR=0
 DO_USAGE=0
 DO_BRAIN=0
+DO_SETUP=0
 NO_MODEL=0
 
 if [[ $# -eq 0 ]]; then
@@ -59,11 +63,12 @@ fi
 
 for arg in "$@"; do
   case "$arg" in
-    --all)         DO_SUMMON=1; DO_STATUSBAR=1; DO_USAGE=1; DO_BRAIN=1 ;;
+    --all)         DO_SUMMON=1; DO_STATUSBAR=1; DO_USAGE=1; DO_BRAIN=1; DO_SETUP=1 ;;
     --summon)      DO_SUMMON=1 ;;
     --statusbar)   DO_STATUSBAR=1 ;;
     --usage-today) DO_USAGE=1 ;;
     --brain)       DO_BRAIN=1 ;;
+    --setup)       DO_SETUP=1 ;;
     --no-model)    NO_MODEL=1 ;;
     -h|--help)     usage; exit 0 ;;
     *) die "unknown flag: $arg (try --help)" ;;
@@ -71,7 +76,7 @@ for arg in "$@"; do
 done
 
 # --no-model on its own is not a component to install.
-if [[ "$DO_SUMMON$DO_STATUSBAR$DO_USAGE$DO_BRAIN" == "0000" ]]; then
+if [[ "$DO_SUMMON$DO_STATUSBAR$DO_USAGE$DO_BRAIN$DO_SETUP" == "00000" ]]; then
   warn "No component selected. Did you mean --all? Showing usage."
   usage
   exit 0
@@ -167,6 +172,17 @@ if [[ "$DO_BRAIN" == "1" ]]; then
   bash "$BRAIN_BOOTSTRAP"
   INSTALLED+=("claude-brain")
   FOLLOWUPS+=("claude-brain: make sure Obsidian is running with the Local REST API plugin enabled, then restart Claude Code.")
+fi
+
+# ==== setup (portable ~/.claude config) ====================================
+if [[ "$DO_SETUP" == "1" ]]; then
+  say "Installing the portable setup (hooks, skills, weekly auto-audit)"
+  SETUP_INSTALLER="$REPO_DIR/setup/install.sh"
+  [[ -f "$SETUP_INSTALLER" ]] || die "missing $SETUP_INSTALLER"
+  warn "setup is interactive; it prompts for your name, email, GitHub user, and vault path."
+  bash "$SETUP_INSTALLER"
+  INSTALLED+=("setup")
+  FOLLOWUPS+=("setup: review the merged CLAUDE.md and settings.json; third-party skills are listed in setup/SKILLS.md.")
 fi
 
 # ==== summary ==============================================================
