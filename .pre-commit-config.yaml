@@ -1,0 +1,22 @@
+# Pre-commit hooks for privacy and secret enforcement on this public repo.
+# Install once with: pre-commit install
+# Run on demand with: pre-commit run --all-files
+#
+# Two layers of defense:
+#   1. gitleaks  scans staged content for secrets (API keys, tokens, etc.)
+#   2. local guard  blocks private paths, home dirs, emails, and Tailscale IPs
+
+repos:
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.18.4
+    hooks:
+      - id: gitleaks
+
+  - repo: local
+    hooks:
+      - id: precommit-guard
+        name: privacy guard (no private paths, emails, keys, tailscale IPs)
+        entry: scripts/precommit-guard.sh
+        language: script
+        pass_filenames: false
+        always_run: true

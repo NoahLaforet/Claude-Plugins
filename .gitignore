@@ -18,7 +18,7 @@ summon/dictate_state.json
 summon/Summon.iconset/
 summon/preview.png
 
-# Personal / non-public folders — defensive excludes
+# Personal and non-public folders (defensive excludes)
 migration/
 terminal-guide/
 dist/
@@ -28,3 +28,53 @@ SANITIZATION_NOTES.md
 *.log
 *.stdout.log
 *.stderr.log
+
+# Personal Obsidian vault - NEVER commit (full chat history, memories)
+Claude Brain/
+
+# =============================================================================
+# Claude Code local/state hardening
+#
+# Explicit, by-name excludes for Claude Code local and session files so that a
+# future `git add -A` run from anywhere in this tree can never sweep them in.
+# These are listed individually (not just by glob) on purpose: belt and braces.
+# Do not remove entries above; this block only adds to them.
+# =============================================================================
+
+# --- Credentials and secrets ---
+.credentials.json
+credentials.json
+.claude.json
+.claude.json.backup.*
+sync_config.json
+.env
+.env.*
+settings.local.json
+
+# --- Session history and logs (JSONL) ---
+history.jsonl
+**/*.jsonl
+
+# --- Claude Code session state directories ---
+todos/
+plans/
+tasks/
+teams/
+shell-snapshots/
+paste-cache/
+file-history/
+session-env/
+statsig/
+telemetry/
+usage-data/
+ide/
+
+# --- Claude Code local caches and warning files ---
+stats-cache.json
+mcp-needs-auth-cache.json
+security_warnings_*.json
+
+# --- Summon app runtime state and models ---
+summon/models/
+summon/state.json
+summon/dictate_state.json

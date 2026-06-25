@@ -1,0 +1,23 @@
+name: gitleaks
+
+# Scan for committed secrets on every push and pull request.
+# Uses the full git history (fetch-depth 0) so old commits are covered too.
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  gitleaks:
+    name: scan for secrets
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
