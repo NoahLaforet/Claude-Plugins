@@ -152,7 +152,7 @@ def render_turn(record: dict) -> str:
     ts = fmt_ts(record.get('timestamp', ''))
     sidechain = ' | sub-agent' if record.get('isSidechain') else ''
     icon = 'Human' if rtype == 'user' else 'Assistant'
-    header = f'### {icon} — {ts}{sidechain}'
+    header = f'### {icon} · {ts}{sidechain}'
 
     msg = record.get('message') or {}
     content = msg.get('content') or []

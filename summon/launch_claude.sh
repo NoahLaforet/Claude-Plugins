@@ -1,7 +1,7 @@
 #!/bin/bash
 # Open a new iTerm2 window in fullscreen and start Claude Code in it.
 # After Claude boots, auto-accept the --dangerously-skip-permissions prompt
-# by sending "1" — harmless no-op when the prompt has already been accepted.
+# by sending "1", harmless no-op when the prompt has already been accepted.
 osascript <<'EOF'
 tell application "iTerm"
   activate

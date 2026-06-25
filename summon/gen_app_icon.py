@@ -27,12 +27,12 @@ def make_icon(size: int) -> Image.Image:
                         fill=(18, 22, 34, 255))
 
     cx = cy = size / 2
-    # Center dot — bright, slightly larger than a strict dot for app-icon presence
+    # Center dot, bright, slightly larger than a strict dot for app-icon presence
     dot_r = size * 0.055
     d.ellipse([cx - dot_r, cy - dot_r, cx + dot_r, cy + dot_r],
               fill=(240, 248, 255, 255))
 
-    # Three expanding rings — soft glow feel via decreasing alpha
+    # Three expanding rings, soft glow feel via decreasing alpha
     ring_specs = [(0.16, 255), (0.26, 200), (0.36, 140)]
     stroke = max(2, int(round(size * 0.014)))
     for frac, alpha in ring_specs:

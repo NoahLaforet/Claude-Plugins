@@ -124,7 +124,7 @@ cat > "$APP_ROOT/Contents/Info.plist" <<PLEOF
 PLEOF
 [[ -f "$REPO_DIR/icon.icns" ]] && cp "$REPO_DIR/icon.icns" "$APP_ROOT/Contents/Resources/icon.icns"
 
-# 7. Permissions reminder — show the exact Python.app path to add
+# 7. Permissions reminder, show the exact Python.app path to add
 PY_APP="$(ls -d /opt/homebrew/Cellar/python@*/*/Frameworks/Python.framework/Versions/*/Resources/Python.app 2>/dev/null | head -1 || true)"
 
 cat <<DONE

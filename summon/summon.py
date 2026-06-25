@@ -1,4 +1,4 @@
-"""Summon — macOS menu-bar companion for Claude Code.
+"""Summon, macOS menu-bar companion for Claude Code.
 
 Two integrated features:
 
@@ -43,7 +43,7 @@ DOUBLE_CLAP_MAX_MS = 700           # wider window so slower double-claps still r
 COOLDOWN_SEC = 3.0
 BASELINE_EXCLUDE_MS = 200
 
-# Icon cycling — three animation families for the three "on" states.
+# Icon cycling, three animation families for the three "on" states.
 #   radar_0N → double-clap launcher only
 #   mic_0N   → dictate only
 #   super_0N → both enabled
@@ -169,12 +169,12 @@ class Detector:
             # Gate 2: absolute loudness (not just quiet-room-relative)
             if db < MIN_ABSOLUTE_PEAK_DB:
                 return
-            # Gate 3: sharp attack — previous block must be much quieter.
+            # Gate 3: sharp attack, previous block must be much quieter.
             # Claps are transients; speech/music ramps in gradually.
             prev_db = self.blocks[-2][1] if len(self.blocks) >= 2 else db
             if db - prev_db < SHARPNESS_RISE_DB:
                 return
-            # Peak — enforce cooldown since last trigger
+            # Peak, enforce cooldown since last trigger
             if now - self.last_trigger_ts < COOLDOWN_SEC:
                 return
             if self.pending_peak_ts is None:
@@ -182,7 +182,7 @@ class Detector:
                 return
             gap_ms = (now - self.pending_peak_ts) * 1000.0
             if gap_ms < DOUBLE_CLAP_MIN_MS:
-                # Same clap echoing through adjacent blocks — ignore.
+                # Same clap echoing through adjacent blocks, ignore.
                 return
             if gap_ms > DOUBLE_CLAP_MAX_MS:
                 # First clap timed out; treat current as new first clap.
@@ -221,7 +221,7 @@ class SummonApp(rumps.App):
         )
         self._item_skip.state = 1 if self._skip_if_running else 0
 
-        # Dictate integration — owns its own hotkey tap + submenu items
+        # Dictate integration, owns its own hotkey tap + submenu items
         self.dictate = DictateController()
         self._item_dictate = rumps.MenuItem("Dictate", callback=self._toggle_dictate)
         self._item_dictate.state = 1 if self.dictate.is_master_enabled() else 0
@@ -249,7 +249,7 @@ class SummonApp(rumps.App):
 
         self.detector = Detector(on_double_clap=self._launch_claude)
         if self._enabled and not self.detector.start():
-            # Couldn't open the mic — start disabled instead of lying about state.
+            # Couldn't open the mic, start disabled instead of lying about state.
             self._enabled = False
             self._item_enabled.state = 0
             self._persist()

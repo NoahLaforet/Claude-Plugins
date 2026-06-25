@@ -1,6 +1,6 @@
-"""Dictate — voice-to-text for Claude Code, integrated into Summon.
+"""Dictate, voice-to-text for Claude Code, integrated into Summon.
 
-Two hotkeys (tap-to-start, tap-to-stop — Caps Lock is a toggle, not a hold):
+Two hotkeys (tap-to-start, tap-to-stop, Caps Lock is a toggle, not a hold):
   Caps Lock           → "Dictate Now": paste into focused window immediately
   ⇧+Caps Lock         → "Dictate for Claude": queue transcription. If Claude
                         is already running, bring iTerm forward + paste.
@@ -55,7 +55,7 @@ DTYPE = "int16"
 MAX_RECORDING_SEC = 120  # safety cap
 MIN_RECORDING_SEC = 0.4  # below this, discard (accidental tap)
 
-# Hotkeys — macOS virtual keycodes
+# Hotkeys, macOS virtual keycodes
 KEY_CAPS_LOCK = 57
 # CGEvent flag masks
 CAPS_MASK = 0x00010000        # kCGEventFlagMaskAlphaShift (caps lock on)
@@ -70,7 +70,7 @@ ITERM_BUNDLE = "com.googlecode.iterm2"
 
 # Queue config
 QUEUE_SEPARATOR = "\n"
-QUEUE_TTL_SEC = 600  # 10 min — clear stale queue
+QUEUE_TTL_SEC = 600  # 10 min, clear stale queue
 
 # Sounds
 SOUND_START = "Pop"
@@ -274,7 +274,7 @@ class HotkeyTap:
     """CGEventTap that detects Right-Ctrl + ; / ' as hold-to-talk triggers.
 
     Runs its own CFRunLoop on a background thread. Callbacks fire on that
-    thread — they should be fast and dispatch work elsewhere.
+    thread, they should be fast and dispatch work elsewhere.
     """
 
     def __init__(self, on_down, on_up) -> None:
@@ -308,7 +308,7 @@ class HotkeyTap:
             None,
         )
         if not self._tap:
-            log("hotkey tap: CGEventTapCreate returned NULL — check Input Monitoring permission")
+            log("hotkey tap: CGEventTapCreate returned NULL; check Input Monitoring permission")
             return
 
         self._runloop_source = Quartz.CFMachPortCreateRunLoopSource(None, self._tap, 0)
@@ -411,7 +411,7 @@ class DictateController:
         self._worker_lock = threading.Lock()
         self._hotkeys: HotkeyTap | None = None
 
-        # Menu items — Summon will splice these into its menu
+        # Menu items, Summon will splice these into its menu
         self._m_now = rumps.MenuItem("Dictate Now  (Caps Lock)", callback=self._toggle_now)
         self._m_claude = rumps.MenuItem("Dictate for Claude  (⇧+Caps Lock)", callback=self._toggle_claude)
         self._m_sounds = rumps.MenuItem("Audio feedback", callback=self._toggle_sounds)
@@ -471,7 +471,7 @@ class DictateController:
             log(f"queue expired after {QUEUE_TTL_SEC}s, clearing {len(self.state.queue)} item(s)")
             self.state.queue.clear()
 
-        # iTerm focus triggers paste — but hold off if we just spawned Claude
+        # iTerm focus triggers paste, but hold off if we just spawned Claude
         # and it's still booting.
         if (
             self.state.queue
@@ -546,10 +546,10 @@ class DictateController:
                 copy_to_clipboard(QUEUE_SEPARATOR.join(self.state.queue))
                 log(f"queued ({len(self.state.queue)} item(s)): {text[:80]!r}")
                 if claude_is_running():
-                    # Existing session — just pull iTerm forward; tick() pastes.
+                    # Existing session, just pull iTerm forward; tick() pastes.
                     subprocess.run(["open", "-b", ITERM_BUNDLE], check=False)
                 else:
-                    # No live session — spawn one and wait for Claude's prompt
+                    # No live session, spawn one and wait for Claude's prompt
                     # before pasting (otherwise we clobber the `claude …` line).
                     self.state.paste_earliest_ts = time.time() + CLAUDE_BOOT_SEC
                     log(f"launching new Claude session (paste delayed {CLAUDE_BOOT_SEC}s)")
@@ -603,7 +603,7 @@ class DictateController:
         if not self.state.queue:
             rumps.notification("Dictate", "Queue empty", "Nothing to paste.")
             return
-        # User invoked manually — just paste into whatever is focused.
+        # User invoked manually, just paste into whatever is focused.
         self._paste_queue()
 
     def _open_log(self, _sender) -> None:
@@ -633,7 +633,7 @@ class DictateController:
         if n == 0:
             self._m_queue_info.title = "Queue: empty"
         else:
-            self._m_queue_info.title = f"Queue: {n} item(s) — will paste on iTerm focus"
+            self._m_queue_info.title = f"Queue: {n} item(s), will paste on iTerm focus"
 
     # ── Public status accessor for Summon title ────────────────── #
 

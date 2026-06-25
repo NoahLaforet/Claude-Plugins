@@ -3,10 +3,10 @@
 Three 4-frame animation sets + one disabled frame, all 44x44 template PNGs
 (black-on-transparent) so macOS can auto-tint for light/dark mode.
 
-  radar_01..04  — double-clap launcher only (ring pulse)
-  mic_01..04    — dictate only (mic + pulse waves)
-  super_01..04  — both features on (mic + expanding rings + sparkles)
-  radar_disabled — both off (slashed radar)
+  radar_01..04 , double-clap launcher only (ring pulse)
+  mic_01..04   , dictate only (mic + pulse waves)
+  super_01..04 , both features on (mic + expanding rings + sparkles)
+  radar_disabled, both off (slashed radar)
 """
 from __future__ import annotations
 
@@ -102,7 +102,7 @@ def mic_frame(wave_alphas: tuple[int, int, int]) -> Image.Image:
     img = canvas()
     d = ImageDraw.Draw(img)
     mic_body(d)
-    # Pulse arcs on both sides of the mic body — like WiFi arcs flipped vertical
+    # Pulse arcs on both sides of the mic body, like WiFi arcs flipped vertical
     for side, sign in (("L", -1), ("R", 1)):
         for idx, (r, alpha) in enumerate(zip((6, 10, 14), wave_alphas)):
             if alpha <= 0:

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Daily usage summary — aggregates today's activity across every Claude Code
+"""Daily usage summary, aggregates today's activity across every Claude Code
 session, then renders a multi-line readout styled to match statusline.py."""
 from __future__ import annotations
 
@@ -152,7 +152,7 @@ def collect_today():
     for p in projects:
         try:
             if p.stat().st_mtime < today_start - 600:
-                # File wasn't touched today — skip. (600s slack for clock skew.)
+                # File wasn't touched today, skip. (600s slack for clock skew.)
                 continue
         except Exception:
             continue
@@ -268,12 +268,12 @@ def render(d: dict) -> str:
 
     # Header
     header = (
-        f"{MAGENTA}{BOLD}Usage — {d['today_str']}{RESET}"
+        f"{MAGENTA}{BOLD}Usage: {d['today_str']}{RESET}"
         f"{DIM}  (all Claude Code sessions, local time){RESET}"
     )
     lines.append(header)
 
-    # Line 1 — cost / time / sessions / messages
+    # Line 1, cost / time / sessions / messages
     work_ms = d["work_ms"]
     wt_color = LIME if work_ms < 4 * 3_600_000 else (
         YELLOW if work_ms < 8 * 3_600_000 else ORANGE
@@ -307,7 +307,7 @@ def render(d: dict) -> str:
         line1_parts.append(span_txt)
     lines.append(sep.join(line1_parts))
 
-    # Line 2 — tokens
+    # Line 2, tokens
     total_in = t["input"] + t["cache_read"] + t["cache_create"]
     cache_pct = (t["cache_read"] / total_in * 100) if total_in else 0.0
     cc = LIME if cache_pct >= 90 else (YELLOW if cache_pct >= 70 else RED)
@@ -321,7 +321,7 @@ def render(d: dict) -> str:
         tok_parts.append(f"{DIM}reused: {RESET}{cc}{cache_pct:.0f}%{RESET}")
     lines.append(sep.join(tok_parts))
 
-    # Line 3 — tool use + per-model cost split
+    # Line 3, tool use + per-model cost split
     if t["tool_uses"]:
         lines.append(
             f"{DIM}tool calls: {RESET}{ORANGE}{t['tool_uses']}{RESET}"
@@ -348,7 +348,7 @@ def render(d: dict) -> str:
         if bits:
             lines.append(f"{DIM}by model: {RESET}" + "  ".join(bits))
 
-    # Line 4+ — per-project breakdown (top 6 by cost)
+    # Line 4+, per-project breakdown (top 6 by cost)
     projects_sorted = sorted(
         d["by_project"].items(), key=lambda kv: -kv[1]["cost"]
     )
@@ -378,7 +378,7 @@ def render(d: dict) -> str:
                 f"  {DIM}…and {extra} more ({fmt_money(rest_cost)}){RESET}"
             )
 
-    # Line X — top tools
+    # Line X, top tools
     if d["tool_counts"]:
         tools_sorted = sorted(
             d["tool_counts"].items(), key=lambda kv: -kv[1]

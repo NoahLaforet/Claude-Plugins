@@ -1,6 +1,6 @@
 """Generate an animated GIF showing Summon's menu-bar icon states.
 
-Produces summon/docs/demo.gif — cycles through radar (double-clap),
+Produces summon/docs/demo.gif, cycles through radar (double-clap),
 mic (dictate), super (both), and disabled, tinted white for a dark
 menu-bar mock. Used in the README so the icon work is visible at a glance.
 """

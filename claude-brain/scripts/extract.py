@@ -101,7 +101,7 @@ def render_message(msg: dict) -> str:
     sender = msg.get('sender', 'unknown')
     ts = fmt_ts(msg.get('created_at', ''))
     icon = 'Human' if sender == 'human' else 'Assistant'
-    header = f'### {icon} — {ts}'
+    header = f'### {icon} · {ts}'
 
     # Prefer content blocks (rich); fall back to text
     content = msg.get('content') or []

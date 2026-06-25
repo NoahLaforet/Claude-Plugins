@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Dictate MVP — records N seconds, transcribes with whisper-cli, copies to clipboard.
+# Dictate MVP, records N seconds, transcribes with whisper-cli, copies to clipboard.
 # Usage: ./test_mvp.sh [seconds]  (default 5)
 
 set -euo pipefail
@@ -19,7 +19,7 @@ echo "Recording ${DURATION}s... speak now."
 # Beep so you know recording started
 afplay /System/Library/Sounds/Pop.aiff &
 
-# 16kHz mono PCM — what whisper expects
+# 16kHz mono PCM, what whisper expects
 sox -d -r 16000 -c 1 -b 16 "$WAV" trim 0 "$DURATION" 2>/dev/null
 
 afplay /System/Library/Sounds/Tink.aiff &

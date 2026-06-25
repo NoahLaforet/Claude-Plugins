@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Claude Code statusline — two-line rich display.
+"""Claude Code statusline, two-line rich display.
 
 Line 1: model · effort │ context-bar % tokens/window │ busy/idle
 Line 2: $cost │ ↑in ↓out │ branch · │ week │ +added -removed │ session-time
@@ -30,7 +30,7 @@ CONTEXT_WINDOW = 200_000
 OPUS_4X_CONTEXT_WINDOW = 400_000  # Opus 4.x has extended context headroom before auto-compact
 DEFAULT_MONTH_BUDGET_USD = 100.0
 # Gaps longer than this between events are treated as AFK and not counted
-# toward active time. 10 min — short enough to catch real idleness, long
+# toward active time. 10 min, short enough to catch real idleness, long
 # enough to span a typical Claude tool-use burst + a glance away from the screen.
 IDLE_GAP_S = 600
 
@@ -72,7 +72,7 @@ def cost_from_usage(model_id: str, u: dict) -> float:
 
 RESET = "\033[0m"
 BOLD = "\033[1m"
-# DIM is used for all labels/separators — upgraded from ANSI dim (\033[2m) to an
+# DIM is used for all labels/separators, upgraded from ANSI dim (\033[2m) to an
 # explicit light-gray so it stays subordinate without getting hard to read.
 DIM = "\033[38;5;248m"
 ITALIC = "\033[3m"
@@ -322,7 +322,7 @@ def _accumulate_active_ms(stamps: list[float], idle_gap_s: int,
     """Given a sorted list of event timestamps, sum gaps <= idle_gap_s.
 
     If `live_now` is provided, the gap from the last stamp up to `live_now`
-    is also counted (when within the AFK threshold) — this makes the live
+    is also counted (when within the AFK threshold), this makes the live
     counter tick up between events instead of stalling at the last gap.
     """
     if not stamps:
@@ -345,7 +345,7 @@ def session_work_ms(transcript_path: str | None,
 
     Walks the current session's transcript in timestamp order and sums only
     gaps shorter than `idle_gap_s` (10 min default). A long pause with no
-    prompts and no tool use doesn't count — so the session-time field and
+    prompts and no tool use doesn't count, so the session-time field and
     burn rate reflect time you're actually engaged with Claude, not how
     long the terminal has been open.
     """
@@ -453,7 +453,7 @@ def today_work_ms(idle_gap_s: int = IDLE_GAP_S) -> int:
 def week_work_ms(idle_gap_s: int = IDLE_GAP_S) -> int:
     """Sum active time across all transcripts from the rolling last 7 days.
 
-    Same AFK-aware gap accumulation as `today_work_ms`. Cached 60s — the
+    Same AFK-aware gap accumulation as `today_work_ms`. Cached 60s, the
     week window moves slowly so we can afford a longer cache.
     """
     anchor_ts = _time_anchor_ts()
@@ -545,7 +545,7 @@ def seed_ledger_if_new(led: dict) -> bool:
     """If ledger has no sessions, estimate historical cost from all transcripts.
 
     Uses actual event timestamps from the transcript (not file mtime) so that
-    week/month windows filter correctly — a session from 3 months ago stays
+    week/month windows filter correctly, a session from 3 months ago stays
     outside the 30-day window even if its file was touched recently.
     """
     if led.get("sessions"):
@@ -597,12 +597,12 @@ def record_session_cost(led: dict, session_id: str, cost_usd: float,
     if not session_id:
         return
     sess = led.setdefault("sessions", {}).get(session_id, {})
-    # Live cost from Claude Code is authoritative — overwrites seeded estimate.
+    # Live cost from Claude Code is authoritative, overwrites seeded estimate.
     if cost_usd and cost_usd > 0:
         sess["cost"] = round(float(cost_usd), 6)
         sess["seeded"] = False
     elif "cost" not in sess and transcript_path and os.path.exists(transcript_path):
-        # No live cost yet — estimate from transcript so it shows up immediately.
+        # No live cost yet, estimate from transcript so it shows up immediately.
         est = 0.0
         try:
             with open(transcript_path) as f:
@@ -706,7 +706,7 @@ def busy_indicator() -> str:
 
 
 def effort_from_settings() -> str | None:
-    """Persisted effort from settings.json — fallback for when the live session
+    """Persisted effort from settings.json, fallback for when the live session
     effort isn't in the statusline payload (older Claude Code builds)."""
     try:
         if SETTINGS.exists():
@@ -723,7 +723,7 @@ def effort_label(data: dict) -> str | None:
     """Current effort for the header.
 
     Prefers the live session values Claude Code pipes in on stdin
-    (fast_mode, effort.level) so the bar tracks /effort and --effort changes —
+    (fast_mode, effort.level) so the bar tracks /effort and --effort changes ,
     including max, a session-only level that never lands in settings.json
     (effortLevel caps at xhigh). Falls back to the persisted setting when the
     payload doesn't carry effort.
@@ -773,7 +773,7 @@ def main() -> None:
     budget = float(ledger.get("budget_month_usd") or DEFAULT_MONTH_BUDGET_USD)
     month_pct = 100 * month_usd / budget if budget else 0
 
-    # Active session time — AFK-aware. Replaces Claude Code's wall-clock
+    # Active session time, AFK-aware. Replaces Claude Code's wall-clock
     # `dur_ms`, which counts the terminal being open even when nothing is
     # happening. Used for both the displayed session duration and the
     # $/hr burn rate so a long step-away doesn't tank the rate.
@@ -785,7 +785,7 @@ def main() -> None:
 
     sep = f" {DIM}│{RESET} "
 
-    # Line 1 — model · effort │ context-remaining bar │ month-budget bar │ busy
+    # Line 1, model · effort │ context-remaining bar │ month-budget bar │ busy
     head = f"{MAGENTA}{BOLD}{mname}{RESET}"
     if effort:
         head += f"  {DIM}effort: {RESET}{ORANGE}{effort}{RESET}"
@@ -808,7 +808,7 @@ def main() -> None:
     )
     line1 = sep.join([head, context_block, month_block, busy_indicator()])
 
-    # Line 2 — session-scoped stats (cost trio · token trio · git · turns)
+    # Line 2, session-scoped stats (cost trio · token trio · git · turns)
     cost_bits = [f"{GREEN}${cost_usd:.3f}{RESET}"]
     if burn > 0:
         bc = RED if burn >= 10 else (YELLOW if burn >= 3 else LIME)
@@ -847,7 +847,7 @@ def main() -> None:
         )
     line2 = sep.join(parts)
 
-    # Line 3 — broader tracking (today · week · all-time · avg-session · 7d tokens).
+    # Line 3, broader tracking (today · week · all-time · avg-session · 7d tokens).
     td_color = LIME if today_usd < 20 else (YELLOW if today_usd < 50 else ORANGE)
     wk_color = LIME if week_usd < 25 else (YELLOW if week_usd < 100 else ORANGE)
     paid_sessions = [
@@ -858,7 +858,7 @@ def main() -> None:
     work_ms = today_work_ms()
     wt_color = LIME if work_ms < 4 * 3_600_000 else (YELLOW if work_ms < 8 * 3_600_000 else ORANGE)
     week_work = week_work_ms()
-    # Weekly thresholds are ~5x the daily ones — a typical heavy day is 4-8h,
+    # Weekly thresholds are ~5x the daily ones, a typical heavy day is 4-8h,
     # so a "lots of time spent this week" signal kicks in around 20h.
     wkt_color = LIME if week_work < 20 * 3_600_000 else (YELLOW if week_work < 40 * 3_600_000 else ORANGE)
     plan_parts = [
@@ -872,7 +872,7 @@ def main() -> None:
     ]
     line3 = sep.join(plan_parts)
 
-    # Lines 4+ — last chat text Claude sent, word-wrapped so you can read it
+    # Lines 4+, last chat text Claude sent, word-wrapped so you can read it
     # even after a long tool-use burst scrolls the chat itself off-screen.
     last_txt = last_assistant_text(transcript)
     if last_txt:
