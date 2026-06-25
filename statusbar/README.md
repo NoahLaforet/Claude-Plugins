@@ -12,70 +12,70 @@ $X.XX $X.X/hr 25m │ input: XX.XM output: XXXK reused: XX% │ ⎇ main ●3 �
 today: $XX │ time today: XhXXm │ week: $XX │ time week: XhXXm │ all-time: $XX │ avg-session: $XX │ 7d-tokens: XXM
 ```
 
-Everything updates live — the spinner (`⠏`) cycles every second and shows the
-current tool name (`Edit`, `Bash`, `Grep`…) or `thinking` when between tools.
+Everything updates live. The spinner (`⠏`) cycles every second and shows the
+current tool name (`Edit`, `Bash`, `Grep`...) or `thinking` when between tools.
 When idle it shows `○ idle`.
 
 ## What each field means
 
-**Line 1 — live state**
-- `Opus 4.7` — the active model
-- `effort: max` — current reasoning depth. Reads the live session level Claude
+**Line 1: live state**
+- `Opus 4.7`: the active model
+- `effort: max`: current reasoning depth. Reads the live session level Claude
   Code passes to the statusline, so it tracks `/effort` and `--effort` changes
   (`low`, `medium`, `high`, `xhigh`, `max`). Shows `fast` in fast mode. Note that
-  `max` is session-only — it can't be persisted in `effortLevel` (which caps at
+  `max` is session-only; it can't be persisted in `effortLevel` (which caps at
   `xhigh`), so launch with `claude --effort max` to default to it. Falls back to
   the persisted `effortLevel` on older Claude Code builds that don't pass effort.
-- `context:[bar] 70% 281K left` — context window REMAINING. Bar fills with
+- `context:[bar] 70% 281K left`: context window REMAINING. Bar fills with
   how much you have left; green when healthy, red when running out.
   Denominator is 400K for Opus 4.x, 200K otherwise. This is NOT the 5-hour
-  rate-limit session the Claude app shows — that's not exposed to statusline
+  rate-limit session the Claude app shows; that's not exposed to statusline
   scripts.
-- `month: $X/$100 N%` — this-month spend vs your plan budget. Both the
+- `month: $X/$100 N%`: this-month spend vs your plan budget. Both the
   dollar amount and the percentage are colored by spend tier: green <50%,
   yellow <80%, orange <100%, red at/over budget. Resets on your
   plan-renewal day (set `plan_renewal_day` in `.cost_ledger.json`, 1–28;
   defaults to 1).
-- `⠧ Bash` / `⠋ thinking` / `○ idle` — live activity indicator
+- `⠧ Bash` / `⠋ thinking` / `○ idle`: live activity indicator
 
-**Line 2 — this session** (everything here is since this chat started)
-- `$X.XXX` — session cost (from Claude Code's own `cost.total_cost_usd`)
-- `$X.X/hr` — burn rate (session cost / **active** session time); green
+**Line 2: this session** (everything here is since this chat started)
+- `$X.XXX`: session cost (from Claude Code's own `cost.total_cost_usd`)
+- `$X.X/hr`: burn rate (session cost / **active** session time); green
   <$3, yellow <$10, red above. Catches a runaway turn in real time.
-- `Xm` — **active** session time (AFK-aware). Sums gaps between events
+- `Xm`: **active** session time (AFK-aware). Sums gaps between events
   shorter than 10 minutes; longer gaps are treated as you stepped away
   and are skipped, so a terminal left open overnight doesn't inflate the
   number or tank the burn rate.
-- `input:XM` — tokens sent TO Claude this session: your prompts + attached
+- `input:XM`: tokens sent TO Claude this session: your prompts + attached
   files + tool results + prior conversation re-sent as context.
-- `output:XK` — tokens Claude wrote BACK this session: reply text + tool
+- `output:XK`: tokens Claude wrote BACK this session: reply text + tool
   call arguments. Output is 5× the price of input per token on Opus.
-- `reused:N%` — how much of your input came from Anthropic's prompt cache
+- `reused:N%`: how much of your input came from Anthropic's prompt cache
   instead of fresh reads (caching makes repeat context ~90% cheaper). Green
   ≥90%, yellow ≥70%, red below. A drop means context is churning.
-- `⎇ main ●3` — git branch, `●N` = count of dirty files, `↑/↓` = ahead/behind
-- `you:N claude:M` — number of prompts you sent / replies Claude sent back
+- `⎇ main ●3`: git branch, `●N` = count of dirty files, `↑/↓` = ahead/behind
+- `you:N claude:M`: number of prompts you sent / replies Claude sent back
 
-**Line 3 — broader tracking**
-- `today:$X` — spend since local midnight
-- `time today:XhYYm` — total active time across ALL of today's sessions.
+**Line 3: broader tracking**
+- `today:$X`: spend since local midnight
+- `time today:XhYYm`: total active time across ALL of today's sessions.
   Sums gaps between events shorter than 10 minutes; longer gaps are
   treated as AFK and skipped. Green <4h, yellow <8h, orange beyond.
   Cached 30s.
-- `week:$X` — rolling 7-day spend
-- `time week:XhYYm` — total active time across the rolling last 7 days,
+- `week:$X`: rolling 7-day spend
+- `time week:XhYYm`: total active time across the rolling last 7 days,
   same AFK-aware accounting as `time today:`. Green <20h, yellow <40h,
   orange beyond. Cached 60s.
-- `all-time:$X` — lifetime spend across all Claude Code sessions
-- `avg-session:$X` — average cost per tracked session. Compare to line 2's
+- `all-time:$X`: lifetime spend across all Claude Code sessions
+- `avg-session:$X`: average cost per tracked session. Compare to line 2's
   session cost to see if this chat is running hotter/colder than typical.
-- `7d-tokens:XM` — raw token volume over the last 7 days
+- `7d-tokens:XM`: raw token volume over the last 7 days
 
 ## Why this is cool
 
 Claude Pro/Max is a flat-rate subscription, but every session still has an
 API-equivalent cost. This tracker shows how much API value you're extracting
-from your subscription — a `month:$550/$100 (551%)` reading means 5.5× the
+from your subscription. A `month:$550/$100 (551%)` reading means 5.5× the
 plan price in API-equivalent usage. It's a way to feel the scale of what
 you're getting and catch unusual burn rates early.
 
@@ -106,7 +106,7 @@ Open `~/.claude/settings.json` and merge the contents of
 sed -i '' "s|/Users/YOURNAME|$HOME|g" ~/.claude/settings.json
 ```
 
-If you already have hooks or a statusLine defined, merge manually — don't
+If you already have hooks or a statusLine defined, merge manually; don't
 overwrite.
 
 ### 3. Reload Claude Code
@@ -128,7 +128,7 @@ something else, edit that file:
 }
 ```
 
-Or just delete the ledger file — it'll re-seed on the next refresh using your
+Or just delete the ledger file; it'll re-seed on the next refresh using your
 historical transcripts.
 
 ## How the cost math works
@@ -167,7 +167,7 @@ The statusline keeps working, it just always shows `○ idle`.
 refresh re-seeds from your transcripts.
 
 **Reset the active-time counters:** the `time today:` and `time week:`
-fields scan all your transcripts by default — useful, but if you want a
+fields scan all your transcripts by default. Useful, but if you want a
 fresh start (e.g. "I'll measure my Claude usage starting this Monday"),
 write a reset anchor to `~/.claude/.time_anchor.json`:
 
@@ -188,7 +188,7 @@ time or burn rate.
 ## Troubleshooting
 
 **Statusline shows nothing / plain text fallback**
-- Check `python3 ~/.claude/statusline.py < /dev/null` — if it errors,
+- Check `python3 ~/.claude/statusline.py < /dev/null`; if it errors,
   you need Python 3.8+
 - Verify `settings.json` is valid JSON (`python3 -m json.tool settings.json`)
 
@@ -197,7 +197,7 @@ time or burn rate.
 - Without that, it only refreshes on events, not on a ticking clock
 
 **Busy indicator stuck on a tool name**
-- The Stop hook didn't run — this happens if Claude Code crashed mid-turn
+- The Stop hook didn't run. This happens if Claude Code crashed mid-turn
 - Fix: `rm ~/.claude/.busy` to clear the stuck flag
 
 **Cost number looks way too high**
@@ -213,9 +213,9 @@ time or burn rate.
 
 ## Files
 
-- `statusline.py` — the renderer (stdin JSON → three ANSI lines on stdout)
-- `busy_tool.sh` — one-line helper for the `PreToolUse` hook
-- `settings.example.json` — paste this into `~/.claude/settings.json`
+- `statusline.py`: the renderer (stdin JSON → three ANSI lines on stdout)
+- `busy_tool.sh`: one-line helper for the `PreToolUse` hook
+- `settings.example.json`: paste this into `~/.claude/settings.json`
 
 ## License
 

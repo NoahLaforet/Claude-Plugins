@@ -2,14 +2,14 @@
 
 ![Summon menu-bar states](docs/demo.gif)
 
-A macOS menu-bar companion for Claude Code. Two integrated features:
+A macOS menu-bar companion for Claude Code. It has two features:
 
-1. **Double-clap launcher** — opens a new iTerm2 Claude Code session when you double-clap.
-2. **Dictate** — tap-to-start / tap-to-stop voice-to-text powered by whisper.cpp (local, offline).
-   - **Caps Lock** → "Dictate Now": transcribe and paste into the focused window.
-   - **⇧+Caps Lock** → "Dictate for Claude": queue transcription; if Claude is already running, bring iTerm forward and paste; otherwise launch a fresh Claude session and paste once it boots.
+1. **Double-clap launcher**: opens a new iTerm2 Claude Code session when you double-clap.
+2. **Dictate**: tap-to-start / tap-to-stop voice-to-text powered by whisper.cpp (local, offline).
+   - **Caps Lock** runs "Dictate Now": transcribe and paste into the focused window.
+   - **⇧+Caps Lock** runs "Dictate for Claude": queue transcription; if Claude is already running, bring iTerm forward and paste; otherwise launch a fresh Claude session and paste once it boots.
 
-Toggle everything from the menu bar; no clap / no hotkey = no mic usage.
+Toggle everything from the menu bar. No clap and no hotkey means no mic usage.
 
 ## Install
 
@@ -26,20 +26,20 @@ That script does everything:
 - Builds a Python venv from `requirements.txt`
 - Downloads the whisper model (~1.6 GB, one-time) to `~/.claude/summon/models/`
 - Renders `com.summon.plist.template` with your absolute paths and loads it via `launchctl`
-- Creates `~/Desktop/Summon.app` — a one-click revive + launch button
+- Creates `~/Desktop/Summon.app`, a one-click revive + launch button
 
 Flags:
 
-- `./install.sh --no-model` — skip the whisper download (you'll need to supply `ggml-large-v3-turbo.bin` yourself before Dictate works)
-- `./install.sh --force` — rebuild the venv from scratch
+- `./install.sh --no-model` skips the whisper download (you'll need to supply `ggml-large-v3-turbo.bin` yourself before Dictate works)
+- `./install.sh --force` rebuilds the venv from scratch
 
 ## First-run permissions
 
 Summon needs **three** macOS permissions. All granted under System Settings → Privacy & Security.
 
-1. **Microphone** — prompted on first clap + first dictation.
-2. **Input Monitoring** — required for the Caps Lock hotkey. Add the real Python.app bundle (the installer prints the exact path to add at the end of its run, e.g. `/opt/homebrew/Cellar/python@3.14/<version>/Frameworks/Python.framework/Versions/3.14/Resources/Python.app`).
-3. **Accessibility** — required to inject ⌘V when pasting transcriptions. Add the same Python.app.
+1. **Microphone**: prompted on first clap + first dictation.
+2. **Input Monitoring**: required for the Caps Lock hotkey. Add the real Python.app bundle (the installer prints the exact path to add at the end of its run, e.g. `/opt/homebrew/Cellar/python@3.14/<version>/Frameworks/Python.framework/Versions/3.14/Resources/Python.app`).
+3. **Accessibility**: required to inject ⌘V when pasting transcriptions. Add the same Python.app.
 
 After granting, restart Summon:
 
@@ -69,30 +69,30 @@ launchctl kickstart -k "gui/$(id -u)/com.summon"
 
 ### Menu bar states
 
-- **Radar pulses** → double-clap detector is listening.
-- **Mic pulses** → Dictate is armed (hotkeys live).
-- **"Super" rings + sparkle** → both features on.
-- **Slashed radar** → everything off.
-- **Title shows `🔴`** → dictation is recording.
-- **Title shows `📋N`** → N items queued, will paste on iTerm focus.
+- **Radar pulses**: double-clap detector is listening.
+- **Mic pulses**: Dictate is armed (hotkeys live).
+- **"Super" rings + sparkle**: both features on.
+- **Slashed radar**: everything off.
+- **Title shows `🔴`**: dictation is recording.
+- **Title shows `📋N`**: N items queued, will paste on iTerm focus.
 
 ### Menu items
 
-- **Double-clap launcher** — master toggle for the clap detector.
-- **Skip if Claude already running** — off by default; when on, a clap is ignored if Claude Code is already alive.
-- **Open Claude now** — fires the launcher directly.
-- **Dictate** — master toggle for voice dictation.
-- **Dictate settings** — submenu:
-  - **Dictate Now (Caps Lock)** — enable/disable the immediate-paste hotkey.
-  - **Dictate for Claude (⇧+Caps Lock)** — enable/disable the queue hotkey.
-  - **Queue: N items** — status; shows "will paste on iTerm focus" when non-empty.
-  - **Paste queue into iTerm now** — manual flush.
-  - **Clear queue** — drops queued items.
-  - **Audio feedback** — toggle Pop/Tink/Glass blips.
-  - **Auto-paste (Dictate Now)** — off = copy to clipboard only, no ⌘V injection.
-  - **Open transcription log** — opens `logs/transcriptions.jsonl`.
-- **View log** — opens `summon.log` in Console.
-- **Quit Summon** — fully stops the app.
+- **Double-clap launcher**: master toggle for the clap detector.
+- **Skip if Claude already running**: off by default; when on, a clap is ignored if Claude Code is already alive.
+- **Open Claude now**: fires the launcher directly.
+- **Dictate**: master toggle for voice dictation.
+- **Dictate settings**: submenu:
+  - **Dictate Now (Caps Lock)**: enable/disable the immediate-paste hotkey.
+  - **Dictate for Claude (⇧+Caps Lock)**: enable/disable the queue hotkey.
+  - **Queue: N items**: status; shows "will paste on iTerm focus" when non-empty.
+  - **Paste queue into iTerm now**: manual flush.
+  - **Clear queue**: drops queued items.
+  - **Audio feedback**: toggle Pop/Tink/Glass blips.
+  - **Auto-paste (Dictate Now)**: off = copy to clipboard only, no ⌘V injection.
+  - **Open transcription log**: opens `logs/transcriptions.jsonl`.
+- **View log**: opens `summon.log` in Console.
+- **Quit Summon**: fully stops the app.
 
 ### Dictate hotkeys
 
@@ -130,7 +130,7 @@ Then remove Microphone + Input Monitoring + Accessibility entries under System S
 
 ## Notes
 
-- The orange mic indicator is a macOS privacy feature — it appears whenever the clap detector is listening **or** a dictation is recording. Toggle the detector off (via menu) to free the mic when not in use.
+- The orange mic indicator is a macOS privacy feature. It appears whenever the clap detector is listening **or** a dictation is recording. Toggle the detector off (via menu) to free the mic when not in use.
 - `Summon.app` on Desktop is a one-click trigger that (a) ensures the menu bar service is running via `launchctl kickstart` and (b) opens a new Claude Code session. Use it to revive the menu bar app after an accidental Quit.
 - `launch_claude.sh` runs `claude --effort max --dangerously-skip-permissions` (both the double-clap launcher and Dictate-for-Claude use it), then auto-sends `1` three seconds later to accept the permissions prompt. `max` is session-only and can't be persisted in settings.json (`effortLevel` caps at `xhigh`), so launching with the flag is how Summon defaults sessions to the highest effort.
 - Any edit to `summon.py` or `dictate.py` is picked up after a kickstart:

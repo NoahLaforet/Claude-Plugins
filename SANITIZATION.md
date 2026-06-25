@@ -61,7 +61,7 @@ Run this before every push to the public remote. Copy the box, work top to botto
 
   One expected exception: `claude-brain/scripts/sync_config.example.json` is the sanitized template and is allowed. The real `sync_config.json` (without `.example.`) must never appear. If anything other than the `.example.` file shows up, it is tracked and must be removed (see step 5 on why `.gitignore` alone will not fix it).
 
-- [ ] **4. Run gitleaks on the full history.** Not just the working tree, the whole history, since a secret committed once and deleted later still lives in old commits:
+- [ ] **4. Run gitleaks on the full history.** Scan the whole history, not only the working tree, because a secret committed once and deleted later still lives in old commits:
 
   ```bash
   gitleaks detect --no-banner

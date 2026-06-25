@@ -63,6 +63,12 @@ cd ..
 cd claude-brain
 ./bootstrap.sh
 cd ..
+
+# 5. Portable config: skill router hook, skills, weekly auto-audit
+#    (prompts for your name, email, GitHub user, and vault path)
+cd setup
+./install.sh
+cd ..
 ```
 
 What `summon/install.sh` does:
@@ -101,6 +107,8 @@ Per-component READMEs contain full permission, tuning, and troubleshooting docs.
 ```
 claude-plugins/
 ├── README.md                  (this file)
+├── CHANGELOG.md               dated change history
+├── SANITIZATION.md            pre-publish privacy checklist
 ├── LICENSE                    MIT
 ├── install.sh                 one-shot installer (./install.sh --all)
 ├── .gitignore                 excludes venv/, models, logs, vault, personal settings
@@ -122,6 +130,13 @@ sed -i '' "s|/Users/YOURNAME|$HOME|g" ~/.claude/settings.json
 ```
 
 Do that *after* you've merged the example into your own `settings.json`; see `statusbar/README.md` for the full walkthrough.
+
+---
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for the dated history. Contributing back or forking? The
+privacy rules that keep this repo clean are in [SANITIZATION.md](SANITIZATION.md).
 
 ---
 

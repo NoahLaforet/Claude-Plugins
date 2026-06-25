@@ -1,17 +1,17 @@
-# /usage-today — daily Claude Code usage readout
+# /usage-today: daily Claude Code usage readout
 
 A single slash command that prints a one-screen summary of **everything you did
 in Claude Code today**: cost, active time, tokens, cache-reuse %, which
 projects you spent the most on, and your most-used tools.
 
-It's a companion to the [statusbar](../statusbar) plugin — same visual style,
+It's a companion to the [statusbar](../statusbar) plugin. Same visual style,
 same pricing math, but aggregated across every session you've opened today
 instead of just the current one.
 
 ## What it looks like
 
 ```
-Usage — YYYY-MM-DD  (all Claude Code sessions, local time)
+Usage: YYYY-MM-DD  (all Claude Code sessions, local time)
 cost: $XX.XX │ active: XhYYm │ $X.X/hr │ sessions: N │ you: NN  claude: NNN │ span: HH:MM–HH:MM
 input: XXM │ output: XM │ cache-read: XXM │ cache-write: XM │ reused: XX%
 tool calls: NNN
@@ -27,29 +27,29 @@ system.
 
 ## What each field means
 
-**Header row — today at a glance**
-- `cost: $X.XX` — total API-equivalent spend for today. Green <$20, yellow
+**Header row (today at a glance)**
+- `cost: $X.XX`: total API-equivalent spend for today. Green <$20, yellow
   <$50, orange beyond.
-- `active: XhYYm` — time actually spent working. Sums the gaps between events
+- `active: XhYYm`: time actually spent working. Sums the gaps between events
   in each transcript; gaps longer than 5 minutes are treated as idle and
   skipped. Same method the statusbar uses for `time:`.
-- `$X.X/hr` — burn rate (today's cost ÷ today's active hours).
-- `sessions: N` — count of distinct Claude Code sessions with activity today.
-- `you: N  claude: M` — prompts you sent / replies Claude sent back.
-- `span: HH:MM–HH:MM` — first and last event timestamps of the day.
+- `$X.X/hr`: burn rate (today's cost ÷ today's active hours).
+- `sessions: N`: count of distinct Claude Code sessions with activity today.
+- `you: N  claude: M`: prompts you sent / replies Claude sent back.
+- `span: HH:MM–HH:MM`: first and last event timestamps of the day.
 
 **Token row**
-- `input` — tokens sent TO Claude (all sessions combined). Includes fresh
+- `input`: tokens sent TO Claude (all sessions combined). Includes fresh
   input + cache reads + cache writes.
-- `output` — tokens Claude wrote BACK (replies + tool arguments).
-- `cache-read` / `cache-write` — prompt-cache traffic. Reads are ~90% cheaper
+- `output`: tokens Claude wrote BACK (replies + tool arguments).
+- `cache-read` / `cache-write`: prompt-cache traffic. Reads are ~90% cheaper
   than fresh input; writes are ~25% pricier but pay for themselves on reuse.
-- `reused: XX%` — share of input that came from the cache. Green ≥90%,
-  yellow ≥70%, red below. Low numbers = context is churning and costs are
+- `reused: XX%`: share of input that came from the cache. Green ≥90%,
+  yellow ≥70%, red below. Low numbers mean context is churning and costs are
   climbing.
 
 **Tool row**
-- `tool calls: N` — total Bash / Edit / Read / MCP / etc. invocations today.
+- `tool calls: N`: total Bash / Edit / Read / MCP / etc. invocations today.
 
 **By-model row**
 Cost and message count per model family (Opus / Sonnet / Haiku). Handy if
@@ -87,7 +87,7 @@ falls within today, then for each event:
 Active time uses the same gap-accumulator as the statusbar's `time:` field:
 sort event timestamps per session, sum gaps ≤ 5 minutes as working time.
 
-Nothing gets written to disk — this is a pure read of your existing
+Nothing gets written to disk. This is a pure read of your existing
 transcripts, so it's safe to run as often as you want.
 
 ## Install
@@ -119,33 +119,33 @@ Then reload Claude Code (or open a new session) and run:
 
 ## Requirements
 
-- **Python 3.10+** — stdlib only, no external deps.
+- **Python 3.10+**: stdlib only, no external deps.
 - **Claude Code** with session transcripts under `~/.claude/projects/`.
   That's the default install layout.
 - Works on macOS and Linux. Windows not tested.
 
 ## Customization
 
-**Different pricing or a new model family** — edit the `PRICING_PER_M` dict
+**Different pricing or a new model family**: edit the `PRICING_PER_M` dict
 and the `model_family()` matcher at the top of `usage_today.py`. Same
 pattern as the statusbar.
 
-**Change the idle gap** — the `300` seconds in `collect_today()` controls
-what counts as "active time." Longer = more forgiving, shorter = stricter.
+**Change the idle gap**: the `300` seconds in `collect_today()` controls
+what counts as "active time." Longer is more forgiving, shorter is stricter.
 
-**Show more/fewer projects** — the `projects_sorted[:6]` slice in `render()`
+**Show more/fewer projects**: the `projects_sorted[:6]` slice in `render()`
 caps the by-project list at 6. Raise or lower as you like.
 
-**Hide the top-tools line** — delete the final `if d["tool_counts"]:` block
+**Hide the top-tools line**: delete the final `if d["tool_counts"]:` block
 in `render()`.
 
 ## Files
 
-- `usage_today.py` — the aggregator. Reads `~/.claude/projects/*/*.jsonl`,
+- `usage_today.py`: the aggregator. Reads `~/.claude/projects/*/*.jsonl`,
   prints ANSI-colored text to stdout.
-- `usage-today.md` — the Claude Code slash-command template. The `!` line
+- `usage-today.md`: the Claude Code slash-command template. The `!` line
   inside it is what actually runs the script.
-- `install.sh` — two-file copier.
+- `install.sh`: two-file copier.
 
 ## License
 
